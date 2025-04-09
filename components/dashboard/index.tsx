@@ -1,0 +1,203 @@
+'use client'
+
+import { Box, Flex, Grid, Text } from '@chakra-ui/react'
+import React, { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useToast } from '@chakra-ui/toast'
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber?: string;
+  status?: string;
+  services?: string;
+  createdDate?: string;
+  securityLevel?: string;
+  documents?: string;
+}
+
+function Dashboard() {
+  const router = useRouter();
+  const toast = useToast();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        if (typeof window === 'undefined') return;
+
+        const userDataRaw = localStorage.getItem("userData");
+        const userEmail = localStorage.getItem("userEmail");
+        console.log("LocalStorage data:", { userDataRaw, userEmail });
+
+        if (!userDataRaw || !userEmail) {
+          console.log("Oturum bilgileri bulunamadı");
+          toast({
+            title: 'Oturum Hatası',
+            description: 'Lütfen tekrar giriş yapın',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          router.push('/');
+          return;
+        }
+
+        let userData;
+        try {
+          userData = JSON.parse(userDataRaw);
+          if (!userData.data || !userData.data[0]) {
+            throw new Error("Token bulunamadı");
+          }
+        } catch (e) {
+          console.log("Token format hatası:", e);
+          toast({
+            title: 'Token Hatası',
+            description: 'Oturum bilgileriniz geçersiz. Lütfen tekrar giriş yapın.',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          router.push('/');
+          return;
+        }
+
+        const token = userData.data[0];
+
+        const response = await fetch('https://intfinex.azurewebsites.net/api/User/GetList', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Hata yanıtı:", errorText);
+          toast({
+            title: 'API Hatası',
+            description: `Kullanıcı bilgileri alınamadı (${response.status})`,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          setError('Sunucu bağlantı hatası');
+          return;
+        }
+
+        const result = await response.json();
+        if (!result.isSuccess || !result.data) {
+          toast({
+            title: 'Veri Hatası',
+            description: 'Kullanıcı bilgileri alınamadı',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          setError('Kullanıcı bilgileri alınamadı');
+          return;
+        }
+
+        const currentUser = result.data.find((u: User) => u.email === userEmail);
+        if (currentUser) {
+          setUser(currentUser);
+          toast({
+            title: 'Başarılı',
+            description: 'Hoş geldiniz!',
+            status: 'success',
+            duration: 2000,
+            isClosable: true,
+          });
+        } else {
+          toast({
+            title: 'Kullanıcı Bulunamadı',
+            description: 'Hesap bilgilerinize ulaşılamadı',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          setError('Kullanıcı bulunamadı');
+        }
+
+      } catch (error) {
+        console.error("Hata:", error);
+        toast({
+          title: 'Beklenmeyen Hata',
+          description: 'Bir sorun oluştu, lütfen tekrar deneyin',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        setError('Beklenmeyen bir hata oluştu');
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router, toast]);
+
+
+  
+  if (loading) return <Text mt={20} textAlign="center" color="white">Yükleniyor...</Text>;
+  if (error) return <Text mt={20} textAlign="center" color="red.500">{error}</Text>;
+  if (!user) return <Text mt={20} textAlign="center" color="white">Kullanıcı bilgileri bulunamadı.</Text>;
+
+  const userInfoItems = [
+    { name: "User Id", data: user.id },
+    { name: "Name", data: user.name },
+    { name: "Email", data: user.email },
+    { name: "Phone Number", data: user.phoneNumber || "Not Provided" },
+    { name: "Account Status", data: user.status || "Active" },
+    { name: "Services", data: user.services || "Trading" },
+    { name: "Registration Date", data: user.createdDate || "Unknown" },
+    { name: "Security Level", data: user.securityLevel || "1" },
+    { name: "Documents", data: user.documents || "0" }
+  ];
+
+  return (
+    <Grid
+      templateColumns={{ base: '1fr', md: 'repeat(1, 1fr)' }}
+      gap={6}
+      alignItems="center"
+      maxW="1400px"
+      mx="auto"
+      px={{ base: 4, md: 6, lg: 8 }}
+      display={{ base: 'none', md: 'grid' }}
+      mt={100}
+    >
+      <Box
+        position="relative"
+        backgroundColor="transparent"
+        backdropFilter="blur(10px)"
+        backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
+        backgroundRepeat="no-repeat"
+        backgroundSize="100% 2px, 2px 100%"
+        boxShadow="0px -5px 10px 0px inset rgba(54, 176, 226, 0.5)"
+        borderRadius="10px"
+        p={10}
+      >
+        <Text fontSize={16} fontWeight={300} opacity={0.7} cursor="no-drop">
+          Financial Room (Verification Required)
+        </Text>
+        <Flex direction="column" justifyContent="center">
+          {userInfoItems.map((item) => (
+            <Grid key={item.name} templateColumns="1fr 1fr" mt={5}>
+              <Text>{item.name}</Text>
+              <Text fontSize={16} fontWeight={300} opacity={0.7} cursor="no-drop">
+                {item.data}
+              </Text>
+            </Grid>
+          ))}
+        </Flex>
+      </Box>
+    </Grid>
+  );
+}
+
+export default Dashboard;
