@@ -71,16 +71,23 @@ function Hero() {
 
 
   return (
-    <Flex>
+    <Flex position="relative" width="100%">
       <Box
-        minH="calc(150vh - 100px)"
+        minH={{ base: "100vh", md: "calc(150vh - 100px)" }}
         position="relative"
         overflow="hidden"
         bg="transparent"
         width="100%"
+        px={{ base: 4, sm: 6, md: 8, lg: 10 }}
       >
         {/* İçerik Bölümü */}
-        <Box zIndex={1} textAlign="center" px={6} mt="250px">
+        <Box 
+          zIndex={1} 
+          textAlign="center" 
+          mt={{ base: "150px", sm: "180px", md: "250px" }}
+          maxW="1200px"
+          mx="auto"
+        >
           <Box>
             <Heading
               as="h1"
@@ -108,7 +115,17 @@ function Hero() {
               Intifinex – Empowering Your Financial Future with Smart Trading Solutions
             </Text>
           </Box>
-          <Box mt="50px" alignItems="center" justifyContent="center" display="flex" flexDirection="column" gap="20px">
+          <Box 
+            mt={{ base: "30px", sm: "40px", md: "50px" }} 
+            alignItems="center" 
+            justifyContent="center" 
+            display="flex" 
+            flexDirection="column" 
+            gap={{ base: "15px", md: "20px" }}
+            width="100%"
+            maxW={{ base: "90%", sm: "400px" }}
+            mx="auto"
+          >
             <CustomInput 
               placeholder="Email" 
               icon={FaEnvelope}
@@ -124,13 +141,22 @@ function Hero() {
               onClick={handleLogin}
               loading={isLoading}
               buttonText="Login"
+              width="100%"
             />
-            <Flex justifyContent="space-between" width="100%" maxW="400px" mx="auto">
+            <Flex 
+              justifyContent="space-between" 
+              width="100%" 
+              maxW="400px" 
+              mx="auto"
+              flexDirection={{ base: "column", sm: "row" }}
+              gap={{ base: 2, sm: 0 }}
+              alignItems={{ base: "center", sm: "center" }}
+            >
               <CustomCheckbox />
               <Link 
                 href="/forgot-password" 
                 color="#36b0e2" 
-                fontSize="sm" 
+                fontSize={{ base: "xs", sm: "sm" }}
                 fontWeight="semibold"
                 _hover={{ textDecoration: 'underline' }}
               >
@@ -140,7 +166,14 @@ function Hero() {
           </Box>
         </Box>
       </Box>
-      <Box position="fixed" top="35%" left="85%" transform="translateX(-50%)">
+      <Box 
+        position="fixed" 
+        top={{ base: "auto", md: "35%" }} 
+        bottom={{ base: "20px", md: "auto" }}
+        left={{ base: "50%", md: "85%" }} 
+        transform="translateX(-50%)"
+        zIndex={2}
+      >
         <SocialMedia /> 
       </Box>
     </Flex>

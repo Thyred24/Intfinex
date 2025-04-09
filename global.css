@@ -5,3 +5,16 @@ body {
     color: #fff;
     font-family: "Inter", sans-serif;
 }
+
+.responsive-logo {
+    max-width: 50px !important;
+    max-height: 50px !important;
+  }
+  
+  @media (min-width: 768px) {
+    .responsive-logo {
+      max-width: 70px !important;
+      max-height: 70px !important;
+    }
+  }
+  

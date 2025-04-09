@@ -19,20 +19,32 @@ function CustomInput({
   onChange
 }: CustomInputProps) {
   return (
-    <Box>
-      <InputGroup flex="1" bg="transparent" backdropFilter="blur(5px)">
+    <Box width="100%">
+      <InputGroup 
+        flex="1" 
+        bg="transparent" 
+        backdropFilter="blur(5px)"
+      >
         <Flex width="100%">
           {Icon && (
-            <Box position="absolute" left="3" top="50%" transform="translateY(-50%)" zIndex={1} fontSize={20}>
+            <Box 
+              position="absolute" 
+              left={{ base: "2", sm: "3" }} 
+              top="50%" 
+              transform="translateY(-50%)" 
+              zIndex={1} 
+              fontSize={{ base: 16, sm: 18, md: 20 }}
+            >
               {typeof Icon === 'function' ? <Icon color={iconColor} /> : Icon}
             </Box>
           )}
           <ChakraInput 
-            height={50}
+            height={{ base: "40px", sm: "45px", md: "50px" }}
             placeholder={placeholder}
-            pl={Icon ? 10 : 4}
+            pl={Icon ? { base: 8, sm: 10 } : { base: 3, sm: 4 }}
             borderColor="#36b0e2"
-            fontSize={16}
+            fontSize={{ base: 14, sm: 15, md: 16 }}
+            size={{ base: "md", md: "lg" }}
             type={type}
             onChange={(e) => onChange && onChange(e.target.value)}
             _focus={{ 

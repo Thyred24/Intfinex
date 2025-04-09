@@ -161,42 +161,61 @@ function Dashboard() {
   ];
 
   return (
-    <Grid
-      templateColumns={{ base: '1fr', md: 'repeat(1, 1fr)' }}
-      gap={6}
-      alignItems="center"
-      maxW="1400px"
-      mx="auto"
+    <Box
+      minH="100vh"
+      w="full"
+      py={{ base: 6, md: 12 }}
       px={{ base: 4, md: 6, lg: 8 }}
-      display={{ base: 'none', md: 'grid' }}
-      mt={100}
     >
       <Box
-        position="relative"
-        backgroundColor="transparent"
-        backdropFilter="blur(10px)"
-        backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
-        backgroundRepeat="no-repeat"
-        backgroundSize="100% 2px, 2px 100%"
-        boxShadow="0px -5px 10px 0px inset rgba(54, 176, 226, 0.5)"
-        borderRadius="10px"
-        p={10}
+        maxW="1400px"
+        mx="auto"
+        mt={{ base: 4, md: 8, lg: 12 }}
       >
-        <Text fontSize={16} fontWeight={300} opacity={0.7} cursor="no-drop">
-          Financial Room (Verification Required)
-        </Text>
-        <Flex direction="column" justifyContent="center">
-          {userInfoItems.map((item) => (
-            <Grid key={item.name} templateColumns="1fr 1fr" mt={5}>
-              <Text>{item.name}</Text>
-              <Text fontSize={16} fontWeight={300} opacity={0.7} cursor="no-drop">
-                {item.data}
-              </Text>
-            </Grid>
-          ))}
-        </Flex>
+        <Box
+          position="relative"
+          backgroundColor="transparent"
+          backdropFilter="blur(10px)"
+          backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
+          backgroundRepeat="no-repeat"
+          backgroundSize="100% 2px, 2px 100%"
+          boxShadow="0px -5px 10px 0px inset rgba(54, 176, 226, 0.5)"
+          borderRadius="10px"
+          p={{ base: 4, md: 6, lg: 10 }}
+        >
+          <Text 
+            fontSize={{ base: 14, md: 16 }} 
+            fontWeight={300} 
+            opacity={0.7} 
+            cursor="no-drop"
+            mb={{ base: 4, md: 6 }}
+          >
+            Financial Room (Verification Required)
+          </Text>
+          <Flex direction="column" justifyContent="center" gap={{ base: 3, md: 5 }}>
+            {userInfoItems.map((item) => (
+              <Grid 
+                key={item.name} 
+                templateColumns={{ base: "1fr", sm: "1fr 1fr" }}
+                gap={{ base: 1, sm: 4 }}
+                alignItems="center"
+              >
+                <Text fontSize={{ base: 14, md: 16 }}>{item.name}</Text>
+                <Text 
+                  fontSize={{ base: 14, md: 16 }} 
+                  fontWeight={300} 
+                  opacity={0.7} 
+                  cursor="no-drop"
+                  textAlign={{ base: "left", sm: "right" }}
+                >
+                  {item.data}
+                </Text>
+              </Grid>
+            ))}
+          </Flex>
+        </Box>
       </Box>
-    </Grid>
+    </Box>
   );
 }
 

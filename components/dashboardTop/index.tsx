@@ -111,89 +111,165 @@ function DashboardTop() {
   ]
 
   return (
-    <Box>
-      <Grid
-        templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
-        gap={6}
-        alignItems="center"
-        maxW="1400px"
-        mx="auto"
-        px={{ base: 4, md: 6, lg: 8 }}
-        display={{ base: 'none', md: 'grid' }}
-        justifyContent="space-between"
-      >
-      <Flex gap={5} alignItems="center" mt={8}>
-        <Image src="/images/logo.png" alt="Logo" width={70} height={70} />
-        <Text fontSize={{ base: 24, md: 36 }} fontWeight={500}>Intifinex</Text>
-      </Flex>
+    <Box w="full" position="sticky" top={0} zIndex={10} bg="transparent">
+      <Box maxW="1400px" mx="auto" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 2, md: 4 }}>
+        {/* Desktop View */}
+        <Grid
+          templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
+          gap={6}
+          alignItems="center"
+          display={{ base: 'none', md: 'grid' }}
+        >
+          <Flex gap={5} alignItems="center">
+            <Image src="/images/logo.png" alt="Logo" width={{ base: 50, md: 70 }} height={{ base: 50, md: 70 }} />
+            <Text fontSize={{ base: 24, md: 36 }} fontWeight={500}>Intifinex</Text>
+          </Flex>
 
-      <Flex justifyContent="space-between" alignItems="center" fontWeight={300} fontSize={{ md: 'sm', lg: 'md' }} mt={8}>
-        {items.map((item) => (
-          <Box
-            fontSize="m"
-            key={item.name}
-            alignItems="center"
-            backgroundImage={item.name === "Dashboard" ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
-            backgroundRepeat="no-repeat"
-            backgroundSize={item.name === "Dashboard" ? "100% 2px, 2px 100%" : "auto"}
-            boxShadow={item.name === "Dashboard" ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
-            p="10px 30px"
-            borderRadius={10}
-            transition="all 0.3s ease"
-            zIndex={1}
-            _hover={{
-              ...(item.name === "Settings" && { 
-                backgroundImage: "linear-gradient(to left, #000, rgba(54, 176, 226, 0.2), #000)",
-                boxShadow: "0px -10px 20px 0px inset rgba(54, 176, 226, 0.4)",
-                cursor: 'pointer',
-                transform: 'translateY(-2px)',
-                transition: 'transform 0.2s ease-in-out'
-              }),
-              ...(item.name === "Logout" && {
-                backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
-                boxShadow: "0px -10px 20px 0px inset rgba(255, 0, 0, 0.4)",
-                cursor: 'pointer',
-                transform: 'translateY(-2px)',
-                transition: 'transform 0.2s ease-in-out'
-              }),
-              ...(item.name === "Dashboard" && {
-                backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
-                cursor: 'pointer'
-              })
-            }}
-            onClick={() => {
-              if (item.name === "Logout") {
-                localStorage.removeItem("userData"); // Logout
-                router.push("/");
-              } else if (item.name === "Settings") {
-                setUpdateData({
-                  email: userData?.email || '',
-                  phoneNumber: userData?.phoneNumber || '',
-                  password: ''
-                });
-                onOpen();
-              }
-            }}
-          >
-            <Text>{item.name}</Text>
-          </Box>
-        ))}
+          <Flex justifyContent="flex-end" alignItems="center" gap={{ base: 2, md: 4 }}>
+            {items.map((item) => (
+              <Box
+                key={item.name}
+                fontSize={{ base: 'sm', md: 'md' }}
+                alignItems="center"
+                backgroundImage={item.name === "Dashboard" ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
+                backgroundRepeat="no-repeat"
+                backgroundSize={item.name === "Dashboard" ? "100% 2px, 2px 100%" : "auto"}
+                boxShadow={item.name === "Dashboard" ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
+                p={{ base: "8px 16px", md: "10px 30px" }}
+                borderRadius={10}
+                transition="all 0.3s ease"
+                zIndex={1}
+                _hover={{
+                  ...(item.name === "Settings" && { 
+                    backgroundImage: "linear-gradient(to left, #000, rgba(54, 176, 226, 0.2), #000)",
+                    boxShadow: "0px -10px 20px 0px inset rgba(54, 176, 226, 0.4)",
+                    cursor: 'pointer',
+                    transform: 'translateY(-2px)',
+                    transition: 'transform 0.2s ease-in-out'
+                  }),
+                  ...(item.name === "Logout" && {
+                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
+                    boxShadow: "0px -10px 20px 0px inset rgba(255, 0, 0, 0.4)",
+                    cursor: 'pointer',
+                    transform: 'translateY(-2px)',
+                    transition: 'transform 0.2s ease-in-out'
+                  }),
+                  ...(item.name === "Dashboard" && {
+                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
+                    cursor: 'pointer'
+                  })
+                }}
+                onClick={() => {
+                  if (item.name === "Logout") {
+                    localStorage.removeItem("userData");
+                    router.push("/");
+                  } else if (item.name === "Settings") {
+                    setUpdateData({
+                      email: userData?.email || '',
+                      phoneNumber: userData?.phoneNumber || '',
+                      password: ''
+                    });
+                    onOpen();
+                  }
+                }}
+              >
+                <Text>{item.name}</Text>
+              </Box>
+            ))}
+            {userData && (
+              <Text fontSize={20} fontWeight={500}>
+                Welcome Back{" "}
+                <span style={{
+                  background: 'linear-gradient(to right, #ffffff, #36b0e2)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {userData.name} {userData.surname}
+                </span>
+              </Text>
+            )}
+          </Flex>
+        </Grid>
 
-        {userData && (
-          <Text fontSize={20} fontWeight={500}>
-            Welcome Back{" "}
-            <span style={{
-              background: 'linear-gradient(to right, #ffffff, #36b0e2)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>
-              {userData.name} {userData.surname}
-            </span>
-          </Text>
-        )}
-      </Flex>
-      </Grid>
+        {/* Mobile View */}
+        <Flex
+          display={{ base: 'flex', md: 'none' }}
+          direction="column"
+          gap={4}
+          py={2}
+        >
+          <Flex justifyContent="space-between" alignItems="center">
+            <Flex gap={3} alignItems="center">
+              <Image src="/images/logo.png" alt="Logo" width={40} height={40} />
+              <Text fontSize={20} fontWeight={500}>Intifinex</Text>
+            </Flex>
+          </Flex>
+          <Flex justifyContent="space-between" alignItems="center" gap={2}>
+            {items.map((item) => (
+              <Box
+                key={item.name}
+                fontSize="sm"
+                alignItems="center"
+                backgroundImage={item.name === "Dashboard" ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
+                backgroundRepeat="no-repeat"
+                backgroundSize={item.name === "Dashboard" ? "100% 2px, 2px 100%" : "auto"}
+                boxShadow={item.name === "Dashboard" ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
+                p="8px 12px"
+                borderRadius={8}
+                transition="all 0.3s ease"
+                zIndex={1}
+                flex={1}
+                textAlign="center"
+                _hover={{
+                  ...(item.name === "Settings" && { 
+                    backgroundImage: "linear-gradient(to left, #000, rgba(54, 176, 226, 0.2), #000)",
+                    boxShadow: "0px -10px 20px 0px inset rgba(54, 176, 226, 0.4)",
+                    cursor: 'pointer'
+                  }),
+                  ...(item.name === "Logout" && {
+                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
+                    boxShadow: "0px -10px 20px 0px inset rgba(255, 0, 0, 0.4)",
+                    cursor: 'pointer'
+                  }),
+                  ...(item.name === "Dashboard" && {
+                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
+                    cursor: 'pointer'
+                  })
+                }}
+                onClick={() => {
+                  if (item.name === "Logout") {
+                    localStorage.removeItem("userData");
+                    router.push("/");
+                  } else if (item.name === "Settings") {
+                    setUpdateData({
+                      email: userData?.email || '',
+                      phoneNumber: userData?.phoneNumber || '',
+                      password: ''
+                    });
+                    onOpen();
+                  }
+                }}
+              >
+                {item.name}
+              </Box>
+            ))}
+            {userData && (
+              <Text fontSize={20} fontWeight={500}>
+                Welcome Back{" "}
+                <span style={{
+                  background: 'linear-gradient(to right, #ffffff, #36b0e2)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}>
+                  {userData.name} {userData.surname}
+                </span>
+              </Text>
+            )}
+          </Flex>
+        </Flex>
+      </Box>
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay
@@ -211,7 +287,7 @@ function DashboardTop() {
           <ModalHeader color="white">Update Profile</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody>
-            <Stack gap={4} >
+            <Stack>
               <FormControl>
                 <FormLabel color="white">Email</FormLabel>
                 <Input

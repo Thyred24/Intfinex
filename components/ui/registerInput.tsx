@@ -339,13 +339,24 @@ function RegisterInput(props: StackProps) {
 };
 
 return (
-  <Flex justifyContent="space-between" alignItems="center" width="1500px" bg="rgba(0, 0, 0, 0.1)" padding="10px 40px" borderRadius="10px" backdropFilter="blur(5px)" {...props}>
-    <Box width="60%">
+  <Flex 
+    direction={{ base: "column", lg: "row" }}
+    justifyContent="space-between" 
+    alignItems={{ base: "stretch", lg: "center" }} 
+    width={{ base: "100%", sm: "90%", md: "95%", lg: "1500px" }} 
+    mx="auto"
+    bg="rgba(0, 0, 0, 0.1)" 
+    p={{ base: "20px", sm: "30px", md: "40px" }} 
+    borderRadius={{ base: "8px", sm: "10px" }} 
+    backdropFilter="blur(5px)" 
+    {...props}
+  >
+    <Box width={{ base: "100%", lg: "60%" }}>
       <Text
-        fontSize="3xl"
+        fontSize={{ base: "2xl", sm: "3xl" }}
         fontWeight="bold"
         color="white"
-        mb={6}
+        mb={{ base: 4, sm: 6 }}
         background="linear-gradient(to right, #ffffff, #36b0e2)"
         backgroundClip="text"
         style={{
@@ -356,21 +367,42 @@ return (
         Sign Up
       </Text>
       {activeStep === 0 && (
-        <Box mt="20px" display="grid" gridTemplateColumns="repeat(2, 1fr)" width="100%" gap="20px">
+        <Box 
+          mt={{ base: "15px", sm: "20px" }} 
+          display="grid" 
+          gridTemplateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} 
+          width="100%" 
+          gap={{ base: "15px", sm: "20px" }}
+        >
           {inputFields.map(([name, placeholder, Icon]) => (
-            <InputGroup key={name} flex="1" bg="transparent" backdropFilter="blur(5px)" mb="15px">
+            <InputGroup 
+              key={name} 
+              flex="1" 
+              bg="transparent" 
+              backdropFilter="blur(5px)" 
+              mb={{ base: "10px", sm: "15px" }}
+            >
               <Flex width="100%">
-                <Box position="absolute" left="3" top="50%" transform="translateY(-50%)" zIndex={1} fontSize={20} color="#36b0e2">
+                <Box 
+                  position="absolute" 
+                  left={{ base: "2", sm: "3" }} 
+                  top="50%" 
+                  transform="translateY(-50%)" 
+                  zIndex={1} 
+                  fontSize={{ base: 16, sm: 18, md: 20 }} 
+                  color="#36b0e2"
+                >
                   <Icon />
                 </Box>
                 <ChakraInput
                   name={name}
-                  height={50}
+                  height={{ base: "40px", sm: "45px", md: "50px" }}
                   placeholder={placeholder}
                   borderColor="#36b0e2"
                   value={formData[name]}
                   onChange={handleChange}
-                  pl={10}
+                  pl={{ base: 8, sm: 10 }}
+                  fontSize={{ base: "14px", sm: "15px", md: "16px" }}
                   _focus={{ 
                     boxShadow: '0 0 0 1px #36b0e2',
                     borderColor: '#36b0e2'
@@ -427,30 +459,47 @@ return (
         )}
 
         {activeStep === 1 && environment.smsValidation && (
-          <Box mt="40px" mb="20px">
+          <Box mt={{ base: "20px", sm: "30px", md: "40px" }} mb={{ base: "10px", sm: "15px", md: "20px" }}>
             <Text fontSize="lg" mb={4} color="white">
               We&apos;ve sent a verification code to {formData.phoneNumber}
             </Text>
             
-            <InputGroup flex="1" bg="transparent" backdropFilter="blur(5px)" mb={4} alignItems="center" textAlign="center">
-              <Flex width="50%" alignItems="center" textAlign="center">
+            <InputGroup 
+              flex="1" 
+              bg="transparent" 
+              backdropFilter="blur(5px)" 
+              mb={4} 
+              alignItems="center" 
+              textAlign="center"
+            >
+              <Flex 
+                width={{ base: "100%", sm: "80%", md: "50%" }} 
+                mx="auto"
+                alignItems="center" 
+                textAlign="center"
+              >
               <Box position="absolute" left="3" top="50%" transform="translateY(-50%)">
                 <FaPhone color="#36b0e2" />
               </Box>
               <ChakraInput
                 name="verificationCode"
                 placeholder="SMS Verification Code"
-                height={50}
+                height={{ base: "40px", sm: "45px", md: "50px" }}
                 borderColor="#36b0e2"
-                pl={10}
+                pl={{ base: 8, sm: 10 }}
                 value={formData.verificationCode}
                 onChange={handleChange}
+                fontSize={{ base: "14px", sm: "15px", md: "16px" }}
                 _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
               />
               </Flex>
             </InputGroup>
 
-            <Flex gap={2}>
+            <Flex 
+              gap={2} 
+              direction={{ base: "column", sm: "row" }}
+              alignItems={{ base: "flex-start", sm: "center" }}
+            >
               <Button
                 onClick={sendSmsCode}
                 loading={isSendingSms}
@@ -463,7 +512,12 @@ return (
               >
                 Resend Code
               </Button>
-              <Text color="gray.400" fontSize="sm" alignSelf="center">
+              <Text 
+                color="gray.400" 
+                fontSize={{ base: "xs", sm: "sm" }} 
+                alignSelf={{ base: "flex-start", sm: "center" }}
+                textAlign={{ base: "left", sm: "center" }}
+              >
                 Didn&apos;t receive code? Wait 60 seconds before requesting again.
               </Text>
             </Flex>
@@ -471,30 +525,47 @@ return (
         )}
 
         {activeStep === 2 && environment.emailValidation && (
-          <Box mt="40px" mb="20px">
+          <Box mt={{ base: "20px", sm: "30px", md: "40px" }} mb={{ base: "10px", sm: "15px", md: "20px" }}>
             <Text fontSize="lg" mb={4} color="white">
               We&apos;ve sent a verification code to {formData.email}
             </Text>
             
-            <InputGroup flex="1" bg="transparent" backdropFilter="blur(5px)" mb={4} alignItems="center" textAlign="center">
-              <Flex width="50%" alignItems="center" textAlign="center">
+            <InputGroup 
+              flex="1" 
+              bg="transparent" 
+              backdropFilter="blur(5px)" 
+              mb={4} 
+              alignItems="center" 
+              textAlign="center"
+            >
+              <Flex 
+                width={{ base: "100%", sm: "80%", md: "50%" }} 
+                mx="auto"
+                alignItems="center" 
+                textAlign="center"
+              >
               <Box position="absolute" left="3" top="50%" transform="translateY(-50%)">
                 <FaEnvelope color="#36b0e2" />
               </Box>
               <ChakraInput
                 name="verificationCode"
                 placeholder="Email Verification Code"
-                height={50}
+                height={{ base: "40px", sm: "45px", md: "50px" }}
                 borderColor="#36b0e2"
-                pl={10}
+                pl={{ base: 8, sm: 10 }}
                 value={formData.verificationCode}
                 onChange={handleChange}
+                fontSize={{ base: "14px", sm: "15px", md: "16px" }}
                 _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
               />
               </Flex>
             </InputGroup>
 
-            <Flex gap={2}>
+            <Flex 
+              gap={2} 
+              direction={{ base: "column", sm: "row" }}
+              alignItems={{ base: "flex-start", sm: "center" }}
+            >
               <Button
                 onClick={sendEmailCode}
                 loading={isSendingEmail}
@@ -507,21 +578,32 @@ return (
               >
                 Resend Code
               </Button>
-              <Text color="gray.400" fontSize="sm" alignSelf="center">
+              <Text 
+                color="gray.400" 
+                fontSize={{ base: "xs", sm: "sm" }} 
+                alignSelf={{ base: "flex-start", sm: "center" }}
+                textAlign={{ base: "left", sm: "center" }}
+              >
                 Didn&apos;t receive code? Wait 60 seconds before requesting again.
               </Text>
             </Flex>
           </Box>
         )}
 
-        <Flex mt={6} gap={4}>
+        <Flex 
+          mt={{ base: 4, sm: 5, md: 6 }} 
+          gap={{ base: 3, sm: 4 }}
+          direction={{ base: "column", sm: "row" }}
+          width="100%"
+        >
           {activeStep > 0 && (
             <CustomButton
               borderColor="#36b0e2"
               onClick={goToPrevious}
               variant="outline"
               arrowDirection="left"
-              pl={5}
+              pl={{ base: 3, sm: 5 }}
+              width={{ base: "100%", sm: "auto" }}
               {...styles.outline}
             >
               <Text textAlign="center">Back</Text>
@@ -530,17 +612,30 @@ return (
           <CustomButton
             onClick={activeStep === 0 ? handleNext : (activeStep === 1 ? verifySmsCode : verifyEmailCode)}
             loading={activeStep === 1 ? isVerifyingSms : (activeStep === 2 ? isVerifyingEmail : false)}
+            width={{ base: "100%", sm: "auto" }}
             {...styles.solid}
           >
             {activeStep === 0 ? 
-              (!environment.smsValidation && !environment.emailValidation ? 'Verify & Register' : 'Next')
-              : (activeStep === 1 ? 'Verify SMS' : 'Verify & Register')}
+              (!environment.smsValidation && !environment.emailValidation ? 'Register' : 'Next')
+              : (activeStep === 1 ? 'SMS Verify' : 'Verify and Register')}
           </CustomButton>
         </Flex>
       </Box>
 
-      <Box width="35%" display="flex" alignItems="center" justifyContent="center">
-        <Image src="/images/6256878.jpg" alt="Register" width="100%" />
+      <Box 
+        width={{ base: "100%", lg: "35%" }} 
+        display="flex" 
+        alignItems="center" 
+        justifyContent="center"
+        mt={{ base: 6, lg: 0 }}
+      >
+        <Image 
+          src="/images/6256878.jpg" 
+          alt="Kayıt Görseli" 
+          width="100%"
+          maxW={{ base: "280px", sm: "350px", md: "400px", lg: "100%" }}
+          height="auto"
+        />
       </Box>
     </Flex>
   );
