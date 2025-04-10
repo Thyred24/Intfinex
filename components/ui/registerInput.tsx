@@ -269,7 +269,7 @@ function RegisterInput(props: StackProps) {
     bg: "#36b0e2",
     color: "#000A1C",
     width: "160%",
-    mt: { base: 0, sm: -4 },
+    mt: { base: 0, sm: -10 },
     _hover: {
       color: "#ffffff",
       bg: "linear-gradient(to top, rgb(0, 32, 71) 1%, rgb(54, 176, 226) 10%, rgb(0, 32, 71) 100%)",
@@ -504,6 +504,7 @@ return (
           loading={loading}
           loadingText="Registering..."
           width="100%"
+          mt={{ base: 2, sm: -5 }}
           style={styles.solid}
         >
           Register

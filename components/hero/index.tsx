@@ -136,7 +136,7 @@ function Hero() {
               w="100%"
               mt={{ base: 8, lg: 0 }}
             >
-            <Box mb={4}>
+            <Box mb={4} mt={{ base: 2, sm: 4 }}>
             <CustomInput 
               placeholder="Email" 
               icon={FaEnvelope}
@@ -151,12 +151,6 @@ function Hero() {
               onChange={(value) => setFormData({...formData, password: value})}
             />
             </Box>
-            <CustomButton 
-              onClick={handleLogin}
-              loading={isLoading}
-              buttonText="Login"
-              width="100%"
-            />
             <Flex 
               justifyContent="space-between" 
               width="100%" 
@@ -164,7 +158,6 @@ function Hero() {
               mx="auto"
               flexDirection={{ base: "row", sm: "column" }}
               gap={{ base: 2, sm: 0 }}
-              alignItems={{ base: "center", sm: "center" }}
             >
               <CustomCheckbox />
               <Link 
@@ -177,6 +170,13 @@ function Hero() {
               >
                 Forgot password?
               </Link>
+              <CustomButton 
+              onClick={handleLogin}
+              loading={isLoading}
+              buttonText="Login"
+              width="100%"
+              mt={{ base: 2, sm: 12 }}
+            />
             </Flex>
           </Box>
           </Flex>
