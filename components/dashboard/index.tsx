@@ -6,11 +6,14 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@chakra-ui/toast'
 
 interface User {
-  id: string;
+  uniqueId: string;
   name: string;
   email: string;
   phoneNumber?: string;
+  userLevel?: string;
+  accountAgent?: string;
   status?: string;
+  document?: string;
   services?: string;
   createdDate?: string;
   securityLevel?: string;
@@ -149,15 +152,15 @@ function Dashboard() {
   if (!user) return <Text mt={20} textAlign="center" color="white">Kullanıcı bilgileri bulunamadı.</Text>;
 
   const userInfoItems = [
-    { name: "User Id", data: user.id },
+    { name: "User Id", data: user.uniqueId || "null" },
     { name: "Name", data: user.name },
     { name: "Email", data: user.email },
     { name: "Phone Number", data: user.phoneNumber || "Not Provided" },
-    { name: "Account Status", data: user.status || "Active" },
-    { name: "Services", data: user.services || "Trading" },
+    { name: "Account Agent", data: user.accountAgent || "Global Team" },
+    { name: "Status", data: user.status || "Basic" },
+    { name: "Document", data: user.document || "N/A" },
+    { name: "Services", data: user.services || "N/A" },
     { name: "Registration Date", data: user.createdDate || "Unknown" },
-    { name: "Security Level", data: user.securityLevel || "1" },
-    { name: "Documents", data: user.documents || "0" }
   ];
 
   return (
