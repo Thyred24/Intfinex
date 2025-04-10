@@ -10,6 +10,13 @@ import {
   Stack
 } from '@chakra-ui/react'
 import {
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem
+} from '@chakra-ui/menu'
+import { ChevronDownIcon } from '@chakra-ui/icons'
+import {
   Modal,
   ModalOverlay,
   ModalContent,
@@ -105,89 +112,101 @@ function DashboardTop() {
   }, [router]);
 
   const items = [
-    { name: "Dashboard" },
     { name: "Settings" },
     { name: "Logout" }
   ]
 
   return (
-    <Box w="full" position="sticky" top={0} zIndex={10} bg="transparent">
+    <Box w="full" top={0} zIndex={10} bg="transparent" pt ={150}>
       <Box maxW="1400px" mx="auto" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 2, md: 4 }}>
         {/* Desktop View */}
         <Grid
-          templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)' }}
+          templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
           gap={6}
           alignItems="center"
           display={{ base: 'none', md: 'grid' }}
         >
-          <Flex gap={5} alignItems="center">
-            <Image src="/images/logo.png" alt="Logo" width={{ base: 50, md: 70 }} height={{ base: 50, md: 70 }} />
-            <Text fontSize={{ base: 24, md: 36 }} fontWeight={500}>Intifinex</Text>
-          </Flex>
-
+          <Text 
+            fontSize={{ base: 'sm', md: 'md' }}
+            alignItems="center"
+            backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
+            backgroundRepeat="no-repeat"
+            backgroundSize="100% 2px, 2px 100%"
+            boxShadow="0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)"
+            p={{ base: "8px 16px", md: "10px 30px" }}
+            borderRadius={10}
+            transition="all 0.3s ease"
+            zIndex={1}
+            w="33%"
+            cursor="pointer"
+          >
+            Dashboard
+          </Text>
+          <Text fontSize={{ base: 14, md: 16 }} 
+            fontWeight={300} 
+            opacity={0.7} 
+            cursor="no-drop"
+            mb={{ base: 4, md: 0 }}
+            ml="-60%"
+          >
+            Financial Room (Verification Required)
+          </Text>
           <Flex justifyContent="flex-end" alignItems="center" gap={{ base: 2, md: 4 }}>
-            {items.map((item) => (
-              <Box
-                key={item.name}
-                fontSize={{ base: 'sm', md: 'md' }}
-                alignItems="center"
-                backgroundImage={item.name === "Dashboard" ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
-                backgroundRepeat="no-repeat"
-                backgroundSize={item.name === "Dashboard" ? "100% 2px, 2px 100%" : "auto"}
-                boxShadow={item.name === "Dashboard" ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
-                p={{ base: "8px 16px", md: "10px 30px" }}
-                borderRadius={10}
-                transition="all 0.3s ease"
-                zIndex={1}
-                _hover={{
-                  ...(item.name === "Settings" && { 
-                    backgroundImage: "linear-gradient(to left, #000, rgba(54, 176, 226, 0.2), #000)",
-                    boxShadow: "0px -10px 20px 0px inset rgba(54, 176, 226, 0.4)",
-                    cursor: 'pointer',
-                    transform: 'translateY(-2px)',
-                    transition: 'transform 0.2s ease-in-out'
-                  }),
-                  ...(item.name === "Logout" && {
-                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
-                    boxShadow: "0px -10px 20px 0px inset rgba(255, 0, 0, 0.4)",
-                    cursor: 'pointer',
-                    transform: 'translateY(-2px)',
-                    transition: 'transform 0.2s ease-in-out'
-                  }),
-                  ...(item.name === "Dashboard" && {
-                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
-                    cursor: 'pointer'
-                  })
-                }}
-                onClick={() => {
-                  if (item.name === "Logout") {
-                    localStorage.removeItem("userData");
-                    router.push("/");
-                  } else if (item.name === "Settings") {
-                    setUpdateData({
-                      email: userData?.email || '',
-                      phoneNumber: userData?.phoneNumber || '',
-                      password: ''
-                    });
-                    onOpen();
-                  }
-                }}
-              >
-                <Text>{item.name}</Text>
-              </Box>
-            ))}
             {userData && (
-              <Text fontSize={20} fontWeight={500}>
-                Welcome Back{" "}
-                <span style={{
-                  background: 'linear-gradient(to right, #ffffff, #36b0e2)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
-                  {userData.name} {userData.surname}
-                </span>
-              </Text>
+              <Menu>
+                <MenuButton
+                  as={Flex}
+                  alignItems="center"
+                  gap={2}
+                  cursor="pointer"
+                  _hover={{ opacity: 0.8 }}
+                >
+                  <Flex alignItems="center">
+                    <Text fontSize={20} fontWeight={500}>
+                      Welcome Back{" "}
+                      <span style={{
+                        background: 'linear-gradient(to right, #ffffff, #36b0e2)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                      }}>
+                        {userData.name}
+                      </span>
+                    </Text>
+                    <ChevronDownIcon color="#36b0e2" w={40} h={40} ml={2} />
+                  </Flex>
+                </MenuButton>
+                <MenuList bg="#000A1C" border="1px solid #36b0e2">
+                  <MenuItem
+                    onClick={() => {
+                      setUpdateData({
+                        email: userData?.email || '',
+                        phoneNumber: userData?.phoneNumber || '',
+                        password: ''
+                      });
+                      onOpen();
+                    }}
+                    _hover={{ bg: 'rgba(54, 176, 226, 0.2)' }}
+                    color="white"
+                    p="5px 30px"
+                    cursor="pointer"
+                  >
+                    Settings
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      localStorage.removeItem("userData");
+                      router.push("/");
+                    }}
+                    _hover={{ bg: 'rgba(255, 87, 34, 0.2)' }}
+                    color="white"
+                    p="5px 30px"
+                    cursor="pointer"
+                  >
+                    Logout
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             )}
           </Flex>
         </Grid>

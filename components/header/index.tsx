@@ -5,18 +5,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons'
 import Btn from '../ui/button'
-import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 
 function Header() {
-
-  const pathname = usePathname();
   const router = useRouter();
   const { open: isOpen, onToggle } = useDisclosure();
-
-  if (pathname === '/dashboard') {
-    return null;
-  }
   
   return (
     <Box as="header" 

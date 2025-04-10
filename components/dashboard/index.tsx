@@ -183,15 +183,6 @@ function Dashboard() {
           borderRadius="10px"
           p={{ base: 4, md: 6, lg: 10 }}
         >
-          <Text 
-            fontSize={{ base: 14, md: 16 }} 
-            fontWeight={300} 
-            opacity={0.7} 
-            cursor="no-drop"
-            mb={{ base: 4, md: 6 }}
-          >
-            Financial Room (Verification Required)
-          </Text>
           <Flex direction="column" justifyContent="center" gap={{ base: 3, md: 5 }}>
             {userInfoItems.map((item) => (
               <Grid 

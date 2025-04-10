@@ -12,6 +12,7 @@
     "@chakra-ui/form-control": "^2.2.0",
     "@chakra-ui/hooks": "^2.4.2",
     "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/menu": "^2.2.1",
     "@chakra-ui/modal": "^2.3.1",
     "@chakra-ui/react": "^3.15.0",
     "@chakra-ui/stepper": "^2.3.1",

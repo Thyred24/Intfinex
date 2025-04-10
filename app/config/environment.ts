@@ -4,7 +4,7 @@ export const environment = {
   smsValidation: false,    // SMS doğrulaması aktif/pasif
   
   // API endpoints
-  apiUrl: 'https://intfinex.azurewebsites.net/api',
+  apiUrl: 'https://intfinex.azurewebsites.net',
   
   // Validation endpoints
   verificationEndpoints: {

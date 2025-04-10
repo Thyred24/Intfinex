@@ -10,6 +10,7 @@ import { FaEnvelope } from 'react-icons/fa'
 import CustomCheckbox from '@/components/ui/chekbox'
 import SocialMedia from '@/components/ui/social-media'
 import { useRouter } from 'next/navigation'
+import RegisterInput from '@/components/ui/registerInput'
 
 function Hero() {
   const [formData, setFormData] = useState({
@@ -115,28 +116,41 @@ function Hero() {
               Intifinex – Empowering Your Financial Future with Smart Trading Solutions
             </Text>
           </Box>
-          <Box 
-            mt={{ base: "30px", sm: "40px", md: "50px" }} 
-            alignItems="center" 
-            justifyContent="center" 
-            display="flex" 
-            flexDirection="column" 
-            gap={{ base: "15px", md: "20px" }}
-            width="100%"
-            maxW={{ base: "90%", sm: "400px" }}
-            mx="auto"
+          <Flex
+            direction={{ base: 'column', lg: 'row' }}
+            gap={8}
+            justify="center"
+            align="center"
+            mt={8}
           >
+            <Box
+              flex={1}
+              maxW="500px"
+              w="100%"
+            >
+              <RegisterInput />
+            </Box>
+            <Box
+              flex={1}
+              maxW="400px"
+              w="100%"
+              mt={{ base: 8, lg: 0 }}
+            >
+            <Box mb={4}>
             <CustomInput 
               placeholder="Email" 
               icon={FaEnvelope}
               onChange={(value) => setFormData({...formData, email: value})}
             />
+            </Box>
+            <Box mb={4}>
             <CustomInput 
               placeholder="Password" 
               icon={LuLock}
               type="password"
               onChange={(value) => setFormData({...formData, password: value})}
             />
+            </Box>
             <CustomButton 
               onClick={handleLogin}
               loading={isLoading}
@@ -148,7 +162,7 @@ function Hero() {
               width="100%" 
               maxW="400px" 
               mx="auto"
-              flexDirection={{ base: "column", sm: "row" }}
+              flexDirection={{ base: "row", sm: "column" }}
               gap={{ base: 2, sm: 0 }}
               alignItems={{ base: "center", sm: "center" }}
             >
@@ -158,12 +172,14 @@ function Hero() {
                 color="#36b0e2" 
                 fontSize={{ base: "xs", sm: "sm" }}
                 fontWeight="semibold"
+                mt={{ base: 0, sm: 5 }}
                 _hover={{ textDecoration: 'underline' }}
               >
                 Forgot password?
               </Link>
             </Flex>
           </Box>
+          </Flex>
         </Box>
       </Box>
       <Box 

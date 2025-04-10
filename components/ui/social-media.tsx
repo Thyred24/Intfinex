@@ -5,7 +5,7 @@ import { FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp, FaX } from 'react-icon
 
 function SocialMedia() {
   return (
-    <Flex flexDirection="column" gap={5}>
+    <Flex flexDirection="column" gap={5} display={{ base: "none", sm: "none" }}>
         <Box fontSize={25} color="#36b0e2">
             <Link href="https://wa.me/905555555555">
                 <FaWhatsapp />
