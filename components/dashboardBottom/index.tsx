@@ -1,41 +1,59 @@
+'use client'
+
 import { Box, Flex, Grid, InputGroup, Input as ChakraInput } from '@chakra-ui/react'
 import { Textarea } from '@chakra-ui/react'
 import CustomButton from '@/components/ui/button'
-import React from 'react'
+import React, { useState } from 'react'
 import { FormLabel } from '@chakra-ui/form-control'
 import CustomUpload from '@/components/ui/upload'
 
 function DashboardBottom() {
+  const [isTicketBoxOpen, setIsTicketBoxOpen] = useState(false);
+
+  const toggleTicketBox = () => {
+    setIsTicketBoxOpen(!isTicketBoxOpen);
+  };
+
   return (
     <Grid
       templateColumns="1fr"
-      gap={{ base: 4, md: 6 }}
-      alignItems="center"
+      gap={{ base: 6, md: 8 }}
+      alignItems="start"
       maxW="1400px"
       mx="auto"
-      px={{ base: 4, md: 6, lg: 8 }}
-      mt={{ base: 40, md: 60 }}
-      pb={{ base: 6, md: 10 }}
+      px={{ base: 2, sm: 4, md: 6, lg: 8 }}
+      mt={{ base: 20, sm: 30, md: 40 }}
+      pb={{ base: 4, sm: 6, md: 10 }}
     >
-      <Flex
-        justifyContent="center"
-        gap={{ base: 3, md: 5 }}
+      <Flex 
+        gap={{ base: 3, sm: 4, md: 6 }} 
+        width="100%"
         direction={{ base: "column", sm: "row" }}
-        alignItems={{ base: "stretch", sm: "flex-start" }}
+        justifyContent="center"
       >
-        <Flex direction="column" gap={6}>
-          <CustomButton buttonText="Update Your Account" width="100%" />
-          <CustomButton buttonText="Phone" width="100%" />
-          <CustomButton buttonText="Email" width="100%" />
-          <CustomButton buttonText="Live Chat" width="100%" />
-          <CustomButton buttonText="Whatsapp" width="100%" />
-          <CustomButton buttonText="Telegram" width="100%" />
-        </Flex>
-        <Box 
-          width="100%" 
-          mt={{ base: 6, sm: 0 }}
-          px={{ base: 0, md: 4 }}
-        >
+        <CustomButton 
+          buttonText="Update Your Account" 
+          width={{ base: "100%", sm: "50%" }}
+          height={{ base: "45px", md: "50px" }}
+          mb={{ base: 3, sm: 0 }}
+        />
+        <CustomButton 
+          buttonText="Send Ticket" 
+          onClick={toggleTicketBox}
+          variant={isTicketBoxOpen ? 'outline' : 'solid'}
+          width={{ base: "100%", sm: "50%" }}
+          height={{ base: "45px", md: "50px" }}
+        />
+      </Flex>
+
+      <Box 
+        width="100%" 
+        px={{ base: 0, md: 4 }}
+        display={isTicketBoxOpen ? 'block' : 'none'}
+        opacity={isTicketBoxOpen ? 1 : 0}
+        transform={isTicketBoxOpen ? 'translateY(0)' : 'translateY(-20px)'}
+        transition="all 0.3s ease-in-out"
+      >
           <InputGroup 
             flex="1" 
             bg="transparent" 
@@ -98,12 +116,45 @@ function DashboardBottom() {
           <CustomButton 
             buttonText="Send Ticket" 
             width="full" 
-            mt={{ base: 4, md: 6 }}
+            mt={{ base: 4, md: 20 }}
           /> 
-        </Box>
+      </Box>
+
+      <Flex 
+        mx="auto" 
+        mt={{ base: 10, sm: 15, md: 20 }} 
+        gap={{ base: 2, sm: 3, md: 5 }}
+        flexWrap="wrap"
+        justifyContent="center"
+      >
+        <CustomButton 
+          buttonText="Phone" 
+          width={{ base: "45%", sm: "30%", md: "18%" }}
+          height={{ base: "40px", sm: "45px", md: "50px" }}
+        />
+        <CustomButton 
+          buttonText="Email" 
+          width={{ base: "45%", sm: "30%", md: "18%" }}
+          height={{ base: "40px", sm: "45px", md: "50px" }}
+        />
+        <CustomButton 
+          buttonText="Live Chat" 
+          width={{ base: "45%", sm: "30%", md: "18%" }}
+          height={{ base: "40px", sm: "45px", md: "50px" }}
+        />
+        <CustomButton 
+          buttonText="Whatsapp" 
+          width={{ base: "45%", sm: "30%", md: "18%" }}
+          height={{ base: "40px", sm: "45px", md: "50px" }}
+        />
+        <CustomButton 
+          buttonText="Telegram" 
+          width={{ base: "45%", sm: "30%", md: "18%" }}
+          height={{ base: "40px", sm: "45px", md: "50px" }}
+        />
       </Flex>
     </Grid>
-  )
+  );
 }
 
 export default DashboardBottom
