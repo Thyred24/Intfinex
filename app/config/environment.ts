@@ -1,6 +1,6 @@
 export const environment = {
   // Validation settings
-  emailValidation: false,  // Email doğrulaması aktif/pasif
+  emailValidation: true,  // Email doğrulaması aktif/pasif
   smsValidation: false,    // SMS doğrulaması aktif/pasif
   
   // API endpoints

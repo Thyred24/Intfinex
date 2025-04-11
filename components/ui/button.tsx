@@ -1,3 +1,5 @@
+'use client'
+
 import { Button as ChakraButton, ButtonProps, Icon, HStack } from "@chakra-ui/react"
 import { LuArrowRight, LuArrowLeft } from "react-icons/lu"
 import { useState } from "react"

@@ -2,7 +2,6 @@
 
 import {
   Flex,
-  Image,
   Text,
   Grid,
   Box,
@@ -117,14 +116,87 @@ function DashboardTop() {
   ]
 
   return (
-    <Box w="full" top={0} zIndex={10} bg="transparent" pt ={150}>
+    <Box w="full" top={0} zIndex={10} bg="transparent" pt={{ base: 100, md: 150 }}>
       <Box maxW="1400px" mx="auto" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 2, md: 4 }}>
+        {/* Mobile View */}
+        <Flex
+          direction="column"
+          gap={4}
+          display={{ base: 'flex', lg: 'none' }}  // lg (992px) ve üzerinde gizle
+          alignItems="center"
+        >
+          <Text 
+            fontSize="sm"
+            textAlign="center"
+            backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
+            backgroundRepeat="no-repeat"
+            backgroundSize="100% 2px, 2px 100%"
+            boxShadow="0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)"
+            p="8px 16px"
+            borderRadius={10}
+            transition="all 0.3s ease"
+            zIndex={1}
+            w="full"
+            maxW="200px"
+            cursor="pointer"
+          >
+            Dashboard
+          </Text>
+          <Text 
+            fontSize="14px"
+            fontWeight={300}
+            opacity={0.7}
+            cursor="no-drop"
+            textAlign="center"
+          >
+            Financial Room (Verification Required)
+          </Text>
+          <Menu>
+            <MenuButton
+              as={Flex}
+              fontSize="14px"
+              cursor="pointer"
+              alignItems="center"
+              gap={2}
+            >
+            <span>Welcome Back {" "}</span>  <span style={{
+                        background: 'linear-gradient(to right, #ffffff, #36b0e2)',
+                        backgroundClip: 'text',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent'
+                      }} >{userData?.name}</span>
+              <ChevronDownIcon />
+            </MenuButton>
+            <MenuList bg="rgba(0, 0, 0, 0.85)" border="1px solid" borderColor="#36b0e2">
+              {items.map((item, index) => (
+                <MenuItem
+                  key={index}
+                  onClick={() => {
+                    if (item.name === "Settings") {
+                      onOpen();
+                    } else if (item.name === "Logout") {
+                      localStorage.clear();
+                      router.push('/');
+                    }
+                  }}
+                  bg="transparent"
+                  color="white"
+                  _hover={{ bg: 'rgba(54, 176, 226, 0.2)' }}
+                >
+                  {item.name}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
+        </Flex>
+
         {/* Desktop View */}
         <Grid
+          className="custom-grid"
           templateColumns={{ base: '1fr', md: 'repeat(3, 1fr)' }}
-          gap={6}
+          gap={{ base: 4, md: 6 }}
           alignItems="center"
-          display={{ base: 'none', md: 'grid' }}
+          display={{ base: 'none', lg: 'grid' }}
         >
           <Text 
             fontSize={{ base: 'sm', md: 'md' }}
@@ -210,84 +282,6 @@ function DashboardTop() {
             )}
           </Flex>
         </Grid>
-
-        {/* Mobile View */}
-        <Flex
-          display={{ base: 'flex', md: 'none' }}
-          direction="column"
-          gap={4}
-          py={2}
-        >
-          <Flex justifyContent="space-between" alignItems="center">
-            <Flex gap={3} alignItems="center">
-              <Image src="/images/logo.png" alt="Logo" width={40} height={40} />
-              <Text fontSize={20} fontWeight={500}>Intifinex</Text>
-            </Flex>
-          </Flex>
-          <Flex justifyContent="space-between" alignItems="center" gap={2}>
-            {items.map((item) => (
-              <Box
-                key={item.name}
-                fontSize="sm"
-                alignItems="center"
-                backgroundImage={item.name === "Dashboard" ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
-                backgroundRepeat="no-repeat"
-                backgroundSize={item.name === "Dashboard" ? "100% 2px, 2px 100%" : "auto"}
-                boxShadow={item.name === "Dashboard" ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
-                p="8px 12px"
-                borderRadius={8}
-                transition="all 0.3s ease"
-                zIndex={1}
-                flex={1}
-                textAlign="center"
-                _hover={{
-                  ...(item.name === "Settings" && { 
-                    backgroundImage: "linear-gradient(to left, #000, rgba(54, 176, 226, 0.2), #000)",
-                    boxShadow: "0px -10px 20px 0px inset rgba(54, 176, 226, 0.4)",
-                    cursor: 'pointer'
-                  }),
-                  ...(item.name === "Logout" && {
-                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
-                    boxShadow: "0px -10px 20px 0px inset rgba(255, 0, 0, 0.4)",
-                    cursor: 'pointer'
-                  }),
-                  ...(item.name === "Dashboard" && {
-                    backgroundImage: "linear-gradient(to left, #000, rgba(255, 87, 34, 0.2), #000)",
-                    cursor: 'pointer'
-                  })
-                }}
-                onClick={() => {
-                  if (item.name === "Logout") {
-                    localStorage.removeItem("userData");
-                    router.push("/");
-                  } else if (item.name === "Settings") {
-                    setUpdateData({
-                      email: userData?.email || '',
-                      phoneNumber: userData?.phoneNumber || '',
-                      password: ''
-                    });
-                    onOpen();
-                  }
-                }}
-              >
-                {item.name}
-              </Box>
-            ))}
-            {userData && (
-              <Text fontSize={20} fontWeight={500}>
-                Welcome Back{" "}
-                <span style={{
-                  background: 'linear-gradient(to right, #ffffff, #36b0e2)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
-                  {userData.name} {userData.surname}
-                </span>
-              </Text>
-            )}
-          </Flex>
-        </Flex>
       </Box>
 
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -301,18 +295,19 @@ function DashboardTop() {
           borderColor="#36b0e2"
           borderRadius="15px"
           p={4}
-          width="50%"
+          width={{ base: '90%', sm: '80%', md: '60%', lg: '50%' }}
         >
-          <ModalHeader color="white">Update Profile</ModalHeader>
+          <ModalHeader color="white" fontSize={{ base: '18px', md: '20px' }}>Update Profile</ModalHeader>
           <ModalCloseButton color="white" />
-          <ModalBody>
+          <ModalBody pb={{ base: 4, md: 6 }}>
             <Stack>
               <FormControl>
-                <FormLabel color="white">Email</FormLabel>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Email</FormLabel>
                 <Input
                   value={updateData.email}
                   onChange={(e) => setUpdateData(prev => ({ ...prev, email: e.target.value }))}
                   placeholder="New Email"
+                  size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
                   borderColor="#36b0e2"
@@ -322,11 +317,12 @@ function DashboardTop() {
               </FormControl>
 
               <FormControl>
-                <FormLabel color="white">Phone Number</FormLabel>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Phone Number</FormLabel>
                 <Input
                   value={updateData.phoneNumber}
                   onChange={(e) => setUpdateData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   placeholder="New Phone Number"
+                  size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
                   borderColor="#36b0e2"
@@ -336,12 +332,13 @@ function DashboardTop() {
               </FormControl>
 
               <FormControl>
-                <FormLabel color="white">Password</FormLabel>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Password</FormLabel>
                 <Input
                   type="password"
                   value={updateData.password}
                   onChange={(e) => setUpdateData(prev => ({ ...prev, password: e.target.value }))}
                   placeholder="New Password"
+                  size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
                   borderColor="#36b0e2"

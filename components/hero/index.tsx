@@ -118,67 +118,75 @@ function Hero() {
           </Box>
           <Flex
             direction={{ base: 'column', lg: 'row' }}
-            gap={8}
+            gap={{ base: 8, lg: 8 }}
             justify="center"
             align="center"
             mt={8}
+            mx="auto"
+            maxW={{ base: '100%', lg: '1200px' }}
+            px={{ base: 4, sm: 6 }}
           >
             <Box
               flex={1}
-              maxW="500px"
-              w="100%"
+              w={{ base: '100%', lg: '50%' }}
+              maxW={{ base: '500px', lg: '500px' }}
+              mx="auto"
             >
               <RegisterInput />
             </Box>
             <Box
               flex={1}
-              maxW="400px"
-              w="100%"
-              mt={{ base: 8, lg: 0 }}
-            >
-            <Box mb={4} mt={{ base: 2, sm: 4 }}>
-            <CustomInput 
-              placeholder="Email" 
-              icon={FaEnvelope}
-              onChange={(value) => setFormData({...formData, email: value})}
-            />
-            </Box>
-            <Box mb={4}>
-            <CustomInput 
-              placeholder="Password" 
-              icon={LuLock}
-              type="password"
-              onChange={(value) => setFormData({...formData, password: value})}
-            />
-            </Box>
-            <Flex 
-              justifyContent="space-between" 
-              width="100%" 
-              maxW="400px" 
+              w={{ base: '100%', lg: '50%' }}
+              maxW={{ base: '400px', lg: '400px' }}
               mx="auto"
-              flexDirection={{ base: "row", sm: "column" }}
-              gap={{ base: 2, sm: 0 }}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
             >
-              <CustomCheckbox />
-              <Link 
-                href="/forgot-password" 
-                color="#36b0e2" 
-                fontSize={{ base: "xs", sm: "sm" }}
-                fontWeight="semibold"
-                mt={{ base: 0, sm: 5 }}
-                _hover={{ textDecoration: 'underline' }}
-              >
-                Forgot password?
-              </Link>
-              <CustomButton 
-              onClick={handleLogin}
-              loading={isLoading}
-              buttonText="Login"
-              width="100%"
-              mt={{ base: 2, sm: 12 }}
-            />
-            </Flex>
-          </Box>
+              <Box width="100%" maxW="400px">
+                <Box mb={{ base: 2, md: 4 }} mt={{ base: 0, lg: 4 }}>
+                  <CustomInput 
+                    placeholder="Email" 
+                    icon={FaEnvelope}
+                    onChange={(value) => setFormData({...formData, email: value})}
+                  />
+                </Box>
+                <Box mb={{ base: 2, md: 4 }}>
+                  <CustomInput 
+                    placeholder="Password" 
+                    icon={LuLock}
+                    type="password"
+                    onChange={(value) => setFormData({...formData, password: value})}
+                  />
+                </Box>
+                <Flex 
+                  justifyContent="space-between" 
+                  width="100%"
+                  flexDirection="column"
+                  gap={{ base: 1, md: 2 }}
+                  alignItems="center"
+                >
+                  <CustomCheckbox />
+                  <Link 
+                    href="/forgot-password" 
+                    color="#36b0e2" 
+                    fontSize={{ base: "10px", sm: "xs", md: "sm" }}
+                    fontWeight="semibold"
+                    mt={{ base: 1, md: 2 }}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    Forgot password?
+                  </Link>
+                  <CustomButton 
+                    onClick={handleLogin}
+                    loading={isLoading}
+                    buttonText="Login"
+                    width="100%"
+                    mt={{ base: 2, sm: 12 }}
+                  />
+                </Flex>
+              </Box>
+            </Box>
           </Flex>
         </Box>
       </Box>
@@ -193,7 +201,8 @@ function Hero() {
         <SocialMedia /> 
       </Box>
     </Flex>
-  )
+  );
 }
+
 
 export default Hero

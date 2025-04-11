@@ -16,7 +16,7 @@ interface User {
   document?: string;
   services?: string;
   createdDate?: string;
-  securityLevel?: string;
+  security?: string;
   documents?: string;
 }
 
@@ -152,15 +152,16 @@ function Dashboard() {
   if (!user) return <Text mt={20} textAlign="center" color="white">Kullanıcı bilgileri bulunamadı.</Text>;
 
   const userInfoItems = [
-    { name: "User Id", data: user.uniqueId || "null" },
+    { name: "ID", data: user.uniqueId || "null" },
     { name: "Name", data: user.name },
     { name: "Email", data: user.email },
-    { name: "Phone Number", data: user.phoneNumber || "Not Provided" },
-    { name: "Account Agent", data: user.accountAgent || "Global Team" },
-    { name: "Status", data: user.status || "Basic" },
+    { name: "Phone", data: user.phoneNumber || "Not Provided" },
+    { name: "Security", data: user.security || "Password" },
+    { name: "Agent", data: user.accountAgent || "Global Team" },
+    { name: "Statu", data: user.status || "Basic" },
     { name: "Document", data: user.document || "N/A" },
-    { name: "Services", data: user.services || "N/A" },
-    { name: "Registration Date", data: user.createdDate || "Unknown" },
+    { name: "Service", data: user.services || "N/A" },
+    { name: "Registration", data: user.createdDate || "Unknown" },
   ];
 
   return (

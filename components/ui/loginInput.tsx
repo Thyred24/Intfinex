@@ -9,6 +9,7 @@ interface CustomInputProps {
   iconColor?: string;
   type?: string;
   onChange?: (value: string) => void;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 function CustomInput({ 
@@ -16,7 +17,8 @@ function CustomInput({
   icon: Icon,
   iconColor = "gray.300",
   type = "text",
-  onChange
+  onChange,
+  size = 'md'
 }: CustomInputProps) {
   return (
     <Box width="100%">
@@ -39,12 +41,12 @@ function CustomInput({
             </Box>
           )}
           <ChakraInput 
-            height={{ base: "40px", sm: "45px", md: "50px" }}
+            height={size === 'lg' ? { base: "35px", sm: "40px" } : { base: "40px", sm: "45px", md: "50px" }}
             placeholder={placeholder}
             pl={Icon ? { base: 8, sm: 10 } : { base: 3, sm: 4 }}
             borderColor="#36b0e2"
-            fontSize={{ base: 14, sm: 15, md: 16 }}
-            size={{ base: "md", md: "lg" }}
+            fontSize={size === 'lg' ? { base: 12, sm: 14 } : { base: 14, sm: 15, md: 16 }}
+            size={size}
             type={type}
             onChange={(e) => onChange && onChange(e.target.value)}
             _focus={{ 

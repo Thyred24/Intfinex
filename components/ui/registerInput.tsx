@@ -268,7 +268,7 @@ function RegisterInput(props: StackProps) {
   solid: {
     bg: "#36b0e2",
     color: "#000A1C",
-    width: "160%",
+    width: "100%",
     mt: { base: 0, sm: -10 },
     _hover: {
       color: "#ffffff",
@@ -290,14 +290,20 @@ function RegisterInput(props: StackProps) {
 
 return (
   <Flex 
-    direction={{ base: "column", lg: "row" }} 
-    alignItems={{ base: "stretch", lg: "center" }} 
+    direction="column"
+    alignItems="center"
+    justifyContent="center"
     mx="auto"
     p={{ base: "20px", sm: "30px", md: "40px" }} 
     borderRadius={{ base: "8px", sm: "10px" }}  
+    width="100%"
     {...props}
   >
-    <Box width={{ base: "100%", lg: "60%" }}>
+    <Box 
+      width="100%"
+      maxW={{ base: '400px', lg: '500px' }}
+      mx="auto"
+    >
       {activeStep === 0 && (
         <Box 
           mt={{ base: "15px", sm: "20px" }} 
@@ -312,6 +318,7 @@ return (
               bg="transparent" 
               backdropFilter="blur(5px)" 
               mb={{ base: "10px", sm: "15px" }}
+              width={{ base: "220%", sm: "220%", md: "220%" }}
             >
               <Flex width="100%">
                 <Box 
@@ -328,6 +335,7 @@ return (
                 <ChakraInput
                   name={name}
                   height={{ base: "40px", sm: "45px", md: "50px" }}
+                  width="100%"
                   type={name === 'password' ? 'password' : name === 'phoneNumber' ? 'tel' : 'text'}
                   placeholder={placeholder}
                   borderColor="#36b0e2"
@@ -340,7 +348,6 @@ return (
                     boxShadow: '0 0 0 1px #36b0e2',
                     borderColor: '#36b0e2'
                   }}
-                  width={400}
                 />
                 </Flex>
               </InputGroup>
@@ -361,9 +368,12 @@ return (
             mb={4} 
             alignItems="center" 
             textAlign="center"
+            maxW="100%"
+            mx="auto"
           >
             <Flex 
-              width={{ base: "100%", sm: "80%", md: "50%" }} 
+              width="100%"
+              maxW="100%"
               mx="auto"
               alignItems="center" 
               textAlign="center"
@@ -427,9 +437,12 @@ return (
             mb={4} 
             alignItems="center" 
             textAlign="center"
+            maxW="100%"
+            mx="auto"
           >
             <Flex 
-              width={{ base: "100%", sm: "80%", md: "50%" }} 
+              width="100%"
+              maxW="100%"
               mx="auto"
               alignItems="center" 
               textAlign="center"

@@ -17,4 +17,10 @@ body {
       max-height: 70px !important;
     }
   }
+
+  @media (max-width: 767px) {
+    .custom-grid {
+      display: none;
+    }
+  }
   

@@ -17,6 +17,7 @@ const Footer = () => {
       color="white"
       py={12}
       px={{ base: 4, md: 8, lg: 16 }}
+      mt={100}
     >
       <Flex
         direction={{ base: 'column', md: 'row' }}

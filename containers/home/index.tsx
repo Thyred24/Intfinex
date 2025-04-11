@@ -3,6 +3,7 @@ import React from 'react'
 import InfoSection from '@/components/info'
 import AboutUs from '@/components/about'
 import Faq from '@/components/faq'
+import ContactUs from '@/components/contact'
 
 function HomeContainer() {
   return (
@@ -11,6 +12,7 @@ function HomeContainer() {
       <InfoSection />
       <AboutUs />
       <Faq />
+      <ContactUs />
     </>
   )
 }
