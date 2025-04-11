@@ -166,7 +166,6 @@ function Dashboard() {
 
   return (
     <Box
-      minH="100vh"
       w="full"
       py={{ base: 6, md: 12 }}
       px={{ base: 4, md: 6, lg: 8 }}
