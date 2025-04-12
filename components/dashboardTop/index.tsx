@@ -302,6 +302,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
         <ModalOverlay
           bg="blackAlpha.300"
           backdropFilter="blur(10px)"
+          display="none"
         />
         <ModalContent
           bg="rgba(0, 0, 0, 0.85)"
@@ -310,6 +311,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
           borderRadius="15px"
           p={4}
           width={{ base: '90%', sm: '80%', md: '60%', lg: '50%' }}
+          display="none"
         >
           <ModalHeader color="white" fontSize={{ base: '18px', md: '20px' }}>Update Profile</ModalHeader>
           <ModalCloseButton color="white" />

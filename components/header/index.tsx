@@ -6,10 +6,16 @@ import Link from 'next/link'
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons'
 import Btn from '../ui/button'
 import { useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 function Header() {
   const router = useRouter();
   const { open: isOpen, onToggle } = useDisclosure();
+  const pathname = usePathname();
+
+  if (pathname === "/admin") {
+    return null;
+  }
   
   return (
     <Box as="header" 
