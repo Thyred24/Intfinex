@@ -73,7 +73,7 @@ function FinancialRoom() {
             borderRadius="10px"
             p={{ base: 4, md: 6, lg: 10 }}
             mt={10}
-            height="650px"
+            height="600px"
             width="100%"
           >
             <TradingViewWidget /> 

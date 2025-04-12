@@ -39,9 +39,9 @@ function TradingViewWidget() {
     script.onload = () => {
       if (container.current) {
         new window.TradingView.widget({
-          container_id: container.current.id,
+          container_id: "tradingview_widget", 
+          height: "500px",
           width: "100%",
-          height: "100%",
           symbol: "CAPITALCOM:DXY",
           interval: "D",
           timezone: "Etc/UTC",
@@ -71,7 +71,7 @@ function TradingViewWidget() {
   );
 
   return (
-    <div id="tradingview_widget" ref={container} style={{ height: "500px", width: "100%" }} />
+    <div id="tradingview_widget" ref={container} style={{ height: "100%", width: "100%" }} />
   );
 }
 

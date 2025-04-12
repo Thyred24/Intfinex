@@ -9,8 +9,8 @@ import { LuLock } from 'react-icons/lu'
 import { FaEnvelope } from 'react-icons/fa'
 import CustomCheckbox from '@/components/ui/chekbox'
 import SocialMedia from '@/components/ui/social-media'
-import { useRouter } from 'next/navigation'
 import RegisterInput from '@/components/ui/registerInput'
+import { useAuth } from '@/context/AuthContext'
 
 function Hero() {
   const [formData, setFormData] = useState({
@@ -19,7 +19,7 @@ function Hero() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
@@ -48,12 +48,8 @@ function Hero() {
       console.log("Gelen veri:", result);
 
       if (result.isSuccess) {
-        // Store both the API response and user email
-        localStorage.setItem("userData", JSON.stringify(result));
-        localStorage.setItem("userEmail", formData.email);
+        login(result);
         console.log("API response stored:", result);
-        console.log("Email stored:", formData.email);
-        router.push("/dashboard");
       } else {
         throw new Error(result.message || 'Login failed');
       }
