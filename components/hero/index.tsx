@@ -46,7 +46,15 @@ function Hero() {
       console.log("Gelen veri:", result);
 
       if (result.isSuccess) {
+        console.log('Login başarılı, gelen veri:', result);
         // Role göre yönlendirme
+        // Kullanıcı bilgilerini localStorage'a kaydet
+        localStorage.setItem('userData', JSON.stringify(result));
+        localStorage.setItem('userEmail', formData.email);
+        console.log('LocalStorage kayıt sonrası:', {
+          userData: localStorage.getItem('userData'),
+          userEmail: localStorage.getItem('userEmail')
+        });
         if (result.role === 'admin') {
           window.location.href = '/admin';
         } else {

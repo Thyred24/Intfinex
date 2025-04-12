@@ -15,9 +15,9 @@ interface User {
   status?: string;
   document?: string;
   services?: string;
+  createdDate?: string;
   security?: string;
   documents?: string;
-  registerDate?: string;
 }
 
 function Dashboard() {
@@ -34,10 +34,13 @@ function Dashboard() {
 
         const userDataRaw = localStorage.getItem("userData");
         const userEmail = localStorage.getItem("userEmail");
-        console.log("LocalStorage data:", { userDataRaw, userEmail });
+        console.log("[Dashboard] LocalStorage'dan okunan veriler:", {
+          userDataRaw,
+          userEmail
+        });
 
         if (!userDataRaw || !userEmail) {
-          console.log("Oturum bilgileri bulunamadı");
+          console.log("[Dashboard] Oturum bilgileri bulunamadı");
           toast({
             title: 'Oturum Hatası',
             description: 'Lütfen tekrar giriş yapın',
@@ -52,11 +55,13 @@ function Dashboard() {
         let userData;
         try {
           userData = JSON.parse(userDataRaw);
+          console.log("[Dashboard] Parse edilen userData:", userData);
+          
           if (!userData.data || !userData.data[0]) {
             throw new Error("Token bulunamadı");
           }
         } catch (e) {
-          console.log("Token format hatası:", e);
+          console.log("[Dashboard] Token format hatası:", e);
           toast({
             title: 'Token Hatası',
             description: 'Oturum bilgileriniz geçersiz. Lütfen tekrar giriş yapın.',
@@ -69,6 +74,7 @@ function Dashboard() {
         }
 
         const token = userData.data[0];
+        console.log("[Dashboard] Kullanılacak token:", token);
 
         const response = await fetch('https://intfinex.azurewebsites.net/api/User/GetList', {
           method: 'GET',
@@ -80,7 +86,7 @@ function Dashboard() {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error("API Hata yanıtı:", errorText);
+          console.error("[Dashboard] API Hata yanıtı:", errorText);
           toast({
             title: 'API Hatası',
             description: `Kullanıcı bilgileri alınamadı (${response.status})`,
@@ -93,7 +99,10 @@ function Dashboard() {
         }
 
         const result = await response.json();
+        console.log("[Dashboard] API'den gelen kullanıcı listesi:", result);
+
         if (!result.isSuccess || !result.data) {
+          console.log("[Dashboard] API yanıtı başarısız ya da veri yok");
           toast({
             title: 'Veri Hatası',
             description: 'Kullanıcı bilgileri alınamadı',
@@ -105,7 +114,14 @@ function Dashboard() {
           return;
         }
 
-        const currentUser = result.data.find((u: User) => u.email === userEmail);
+        console.log("[Dashboard] Aranan email:", userEmail);
+        const currentUser = result.data.find((u: User) => {
+          console.log("[Dashboard] Karşılaştırılan kullanıcı:", u);
+          return u.email === userEmail;
+        });
+
+        console.log("[Dashboard] Bulunan kullanıcı:", currentUser);
+
         if (currentUser) {
           setUser(currentUser);
           toast({
@@ -116,6 +132,7 @@ function Dashboard() {
             isClosable: true,
           });
         } else {
+          console.log("[Dashboard] Kullanıcı bulunamadı");
           toast({
             title: 'Kullanıcı Bulunamadı',
             description: 'Hesap bilgilerinize ulaşılamadı',
@@ -161,7 +178,7 @@ function Dashboard() {
     { name: "Statu", data: user.status || "Basic" },
     { name: "Document", data: user.document || "N/A" },
     { name: "Service", data: user.services || "N/A" },
-    { name: "Registration", data: user.registerDate || "Unknown" },
+    { name: "Registration", data: user.createdDate || "Unknown" },
   ];
 
   return (
