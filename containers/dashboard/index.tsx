@@ -13,11 +13,13 @@ function DashboardContainer() {
     <>
       <DashboardTop onViewChange={setActiveView} activeView={activeView} />
       {activeView === 'dashboard' ? (
-        <Dashboard />
+        <>
+          <Dashboard />
+          <DashboardBottom />
+        </>
       ) : (
         <FinancialRoom />
       )}
-      <DashboardBottom />
     </>
   )
 }
