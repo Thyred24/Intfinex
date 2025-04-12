@@ -1,15 +1,25 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 import DashboardTop from '@/components/dashboardTop'
 import Dashboard from '@/components/dashboard'
 import DashboardBottom from '@/components/dashboardBottom'
+import FinancialRoom from '@/components/finencialRoom'
 
 function DashboardContainer() {
+  const [activeView, setActiveView] = useState('dashboard')
+
   return (
     <>
-      <DashboardTop />
-      <Dashboard />
+      <DashboardTop onViewChange={setActiveView} activeView={activeView} />
+      {activeView === 'dashboard' ? (
+        <Dashboard />
+      ) : (
+        <FinancialRoom />
+      )}
       <DashboardBottom />
     </>
   )
 }
+
 export default DashboardContainer

@@ -6,7 +6,8 @@ import {
   Grid,
   Box,
   Input,
-  Stack
+  Stack,
+  Button
 } from '@chakra-ui/react'
 import {
   Menu,
@@ -33,7 +34,12 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import Btn from '@/components/ui/button';
 
-function DashboardTop() {
+interface DashboardTopProps {
+  onViewChange: (view: string) => void;
+  activeView: string;
+}
+
+function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
@@ -125,13 +131,13 @@ function DashboardTop() {
           display={{ base: 'flex', lg: 'none' }}  // lg (992px) ve üzerinde gizle
           alignItems="center"
         >
-          <Text 
-            fontSize="sm"
-            textAlign="center"
-            backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
+          <Button 
+            fontSize={{ base: 'sm', md: 'md' }}
+            alignItems="center"
+            backgroundImage={activeView === 'dashboard' ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
             backgroundRepeat="no-repeat"
             backgroundSize="100% 2px, 2px 100%"
-            boxShadow="0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)"
+            boxShadow={activeView === 'dashboard' ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
             p="8px 16px"
             borderRadius={10}
             transition="all 0.3s ease"
@@ -139,9 +145,10 @@ function DashboardTop() {
             w="full"
             maxW="200px"
             cursor="pointer"
+            onClick={() => onViewChange('dashboard')}
           >
             Dashboard
-          </Text>
+          </Button>
           <Text 
             fontSize="14px"
             fontWeight={300}
@@ -198,31 +205,38 @@ function DashboardTop() {
           alignItems="center"
           display={{ base: 'none', lg: 'grid' }}
         >
-          <Text 
+          <Button 
             fontSize={{ base: 'sm', md: 'md' }}
             alignItems="center"
-            backgroundImage="linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)"
+            backgroundImage={activeView === 'dashboard' ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
             backgroundRepeat="no-repeat"
             backgroundSize="100% 2px, 2px 100%"
-            boxShadow="0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)"
+            boxShadow={activeView === 'dashboard' ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
             p={{ base: "8px 16px", md: "10px 30px" }}
             borderRadius={10}
             transition="all 0.3s ease"
             zIndex={1}
             w="33%"
             cursor="pointer"
+            onClick={() => onViewChange('dashboard')}
           >
             Dashboard
-          </Text>
-          <Text fontSize={{ base: 14, md: 16 }} 
+          </Button>
+          <Button 
+            fontSize={{ base: 14, md: 16 }} 
             fontWeight={300} 
-            opacity={0.7} 
-            cursor="no-drop"
+            opacity={activeView === 'financial' ? 1 : 0.7} 
+            cursor="pointer"
             mb={{ base: 4, md: 0 }}
             ml="-60%"
+            backgroundImage={activeView === 'financial' ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
+            backgroundRepeat="no-repeat"
+            backgroundSize="100% 2px, 2px 100%"
+            boxShadow={activeView === 'financial' ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
+            onClick={() => onViewChange('financial')}
           >
             Financial Room (Verification Required)
-          </Text>
+          </Button>
           <Flex justifyContent="flex-end" alignItems="center" gap={{ base: 2, md: 4 }}>
             {userData && (
               <Menu>

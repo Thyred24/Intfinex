@@ -44,6 +44,8 @@ export default function RegisterInput(props: StackProps) {
   const [verifyError, setVerifyError] = useState('');
   const { activeStep, goToNext, goToPrevious } = useSteps({ index: 0 });
   const [loading, setLoading] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [verificationMessage, setVerificationMessage] = useState('');
 
 
   const [formData, setFormData] = useState<FormData>({
@@ -169,27 +171,26 @@ export default function RegisterInput(props: StackProps) {
   };
 
   const validateEmailCode = async () => {
-    if (!formData.verificationCode || !formData.userId) {
+    if (!formData.verificationCode) {
       const errorMessage = 'Lütfen doğrulama kodunu girin';
       setVerifyError(errorMessage);
-      toast({
-        title: 'Hata',
-        description: errorMessage,
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
+      setVerificationStatus('error');
+      setVerificationMessage(errorMessage);
       return false;
     }
 
     try {
-      console.log('Sending verification request with:', {
-        email: formData.email,
+      setLoading(true);
+      setVerificationStatus('idle');
+      setVerificationMessage('Doğrulama yapılıyor...');
+
+      console.log('Sending validation request:', {
         userId: formData.userId,
-        code: formData.verificationCode
+        code: formData.verificationCode,
+        timestamp: new Date().toISOString()
       });
 
-      const response = await fetch('https://intfinex.azurewebsites.net/api/Verification/ValidateEmailCode', {
+      const verifyResponse = await fetch('https://intfinex.azurewebsites.net/api/Verification/ValidateEmailCode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,65 +199,76 @@ export default function RegisterInput(props: StackProps) {
         }),
       });
 
-      console.log('Verification response status:', response.status);
-      console.log('Verification response headers:', Object.fromEntries(response.headers.entries()));
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Verification failed with status', response.status, 'and body:', errorText);
-        const errorMessage = 'Email doğrulama başarısız';
-        setVerifyError(errorMessage);
-        throw new Error(errorMessage);
-      }
-
-      const responseText = await response.text();
-      console.log('Verification API Response:', responseText);
-
-      // Boş yanıt başarılı kabul edilir
-      if (responseText) {
-        try {
-          const data = JSON.parse(responseText);
-          console.log('Parsed verification response:', data);
-          if (!data.isSuccess) {
-            const errorMessage = data.errors?.[0] || 'Email doğrulama başarısız';
-            console.error('Verification failed with error:', errorMessage);
-            setVerifyError(errorMessage);
-            throw new Error(errorMessage);
-          }
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          // JSON parse hatasını yok say, yanıt boş olabilir
-        }
-      }
-
-      // Doğrulama başarılı, hata mesajını temizle
-      setVerifyError('');
-      
-      toast({
-        title: 'Başarılı',
-        description: 'Email adresiniz doğrulandı. Giriş yapabilirsiniz.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
+      const verifyData = await verifyResponse.json();
+      console.log('Verification API response:', {
+        status: verifyResponse.status,
+        isSuccess: verifyData.isSuccess,
+        errors: verifyData.errors,
+        timestamp: new Date().toISOString()
       });
 
-      // Kısa bir gecikme ile sayfayı yenile ve ana sayfaya yönlendir
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1500); // 1.5 saniye bekle
+      if (verifyResponse.ok && verifyData.isSuccess && (!verifyData.errors || verifyData.errors.length === 0)) {
+        console.log('Validation successful');
+        setVerifyError('');
+        setVerificationStatus('success');
+        setVerificationMessage('Email doğrulama başarılı!');
+        setIsSuccess(true);
 
-      return true;
-    } catch (err: unknown) {
-      const error = err as Error;
-      setVerifyError(error.message);
+        toast({
+          title: 'Başarılı',
+          description: 'Email adresiniz başarıyla doğrulandı!',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1500);
+
+        return true;
+      } else {
+        const errorMessage = verifyData.errors?.[0] || 'Doğrulama başarısız oldu. Lütfen tekrar deneyin.';
+        console.log('Validation failed:', {
+          responseOk: verifyResponse.ok,
+          isSuccess: verifyData.isSuccess,
+          errors: verifyData.errors,
+          errorMessage
+        });
+
+        setVerifyError(errorMessage);
+        setVerificationStatus('error');
+        setVerificationMessage(errorMessage);
+        
+        toast({
+          title: 'Hata',
+          description: errorMessage,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        
+        return false;
+      }
+    } catch (error: unknown) {
+      console.error('Doğrulama hatası:', error);
+      const errorMessage = 'Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+      
+      setVerifyError(errorMessage);
+      setVerificationStatus('error');
+      setVerificationMessage(errorMessage);
+      
       toast({
         title: 'Hata',
-        description: error.message,
+        description: errorMessage,
         status: 'error',
         duration: 3000,
         isClosable: true,
       });
+      
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -324,65 +336,62 @@ export default function RegisterInput(props: StackProps) {
       });
 
       // Email doğrulama kodunu gönder
-      const success = await fetch('https://intfinex.azurewebsites.net/api/Verification/SendEmail', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Debug': 'true'  // Debug bilgisi istiyoruz
-        },
-        body: JSON.stringify({
-          userId: userId,
-          email: formData.email,
-          debug: true  // Backend'den detaylı bilgi istiyoruz
-        }),
-      });
-
-      const emailResponseText = await success.text();
-      console.log('Email API Response:', {
-        status: success.status,
-        statusText: success.statusText,
-        headers: Object.fromEntries(success.headers.entries()),
-        body: emailResponseText,
+      console.log('Sending verification email request:', {
+        userId: userId,
+        email: formData.email,
         timestamp: new Date().toISOString()
       });
 
-      // Response body'yi parse etmeden önce içeriğini kontrol edelim
-      console.log('Raw Email API Response Body:', emailResponseText);
-      
-      let emailResponse;
-      try {
-        emailResponse = JSON.parse(emailResponseText);
-        console.log('Parsed Email API Response:', {
-          isSuccess: emailResponse.isSuccess,
-          errors: emailResponse.errors,
-          email: formData.email
+      const emailResponse = await fetch('https://intfinex.azurewebsites.net/api/Verification/SendEmail', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: userId
+        }),
+      });
+
+      const emailResponseData = await emailResponse.json();
+      console.log('Email API Response:', {
+        status: emailResponse.status,
+        isSuccess: emailResponseData.isSuccess,
+        errors: emailResponseData.errors,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!emailResponse.ok || !emailResponseData.isSuccess) {
+        const errorMessage = emailResponseData.errors?.[0] || 'Email gönderimi başarısız oldu. Lütfen tekrar deneyin.';
+        toast({
+          title: 'Hata',
+          description: errorMessage,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
         });
-      } catch (e) {
-        console.error('Failed to parse email response:', e);
-        throw new Error('Invalid response from email API');
+        return false;
       }
 
-      if (!success.ok || !emailResponse.isSuccess) {
-        const errorMessage = emailResponse.errors?.[0] || 'Failed to send email code';
-        console.error('Email sending failed:', {
-          error: errorMessage,
-          email: formData.email,
-          userId: userId,
-          statusCode: success.status
-        });
-        throw new Error(errorMessage);
-      }
-
+      // Email gönderme başarılı olduğunda kullanıcıya bilgi ver
       console.log('Email verification code sent successfully to:', formData.email);
       
-      // Kullanıcıya bilgi ver
       toast({
-        title: 'Email Sent',
-        description: `Verification code has been sent to ${formData.email}. Please check your inbox and spam folder.`,
-        status: 'info',
-        duration: 6000,
+        title: 'Başarılı',
+        description: 'Doğrulama kodu email adresinize gönderildi.',
+        status: 'success',
+        duration: 3000,
         isClosable: true,
       });
+
+      // Form verilerini güncelle
+      setFormData(prev => ({
+        ...prev,
+        userId: userId
+      }));
+
+      // Sonraki adıma geç
+      goToNext();
+      return true;
 
       console.log('Email verification code sent successfully');
       
@@ -420,12 +429,12 @@ export default function RegisterInput(props: StackProps) {
   };
 
   const handleVerify = async () => {
-    setLoading(true);
     const success = await validateEmailCode();
     setLoading(false);
 
     if (success) {
       setIsSuccess(true);
+      setVerificationStatus('success');
     }
   };
 
@@ -473,11 +482,11 @@ export default function RegisterInput(props: StackProps) {
 return (
   <Flex 
     direction="column"
-    alignItems="center"
+      alignItems="center"
     justifyContent="center"
     mx="auto"
     p={{ base: "20px", sm: "30px", md: "40px" }} 
-    borderRadius={{ base: "8px", sm: "10px" }}  
+    borderRadius={{ base: "8px", sm: "10px"}}  
     width="100%"
     {...props}
   >
@@ -540,85 +549,118 @@ return (
 
       {activeStep === 1 && environment.emailValidation && (
         <Box mt={{ base: "20px", sm: "30px", md: "40px" }} mb={{ base: "10px", sm: "15px", md: "20px" }}>
-          <Text fontSize="lg" mb={4} color="white">
-            We&apos;ve sent a verification code to {formData.email}
-          </Text>
+        <Text fontSize="lg" mb={4} color="white">
+          We&apos;ve sent a verification code to {formData.email}
+        </Text>
 
-          <InputGroup 
-            flex="1" 
-            bg="transparent" 
-            backdropFilter="blur(5px)" 
-            mb={4} 
-            alignItems="center" 
+        {/* Doğrulama durumunu gösteren feedback alanı */}
+        {verificationStatus !== 'idle' && (
+          <Alert 
+            status={verificationStatus} 
+            borderRadius="md" 
+            mb={4}
+            variant="subtle"
+            flexDirection="column"
+            alignItems="center"
+            justifyContent="center"
             textAlign="center"
+          >
+            <AlertIcon boxSize="24px" mr={0} />
+            <AlertTitle mt={2} mb={1}>
+              {verificationStatus === 'success' ? 'Başarılı!' : 'Hata!'}
+            </AlertTitle>
+            <AlertDescription maxWidth="sm">
+              {verificationMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <InputGroup 
+          flex="1" 
+          bg="transparent" 
+          backdropFilter="blur(5px)" 
+          mb={4} 
+          alignItems="center" 
+          textAlign="center"
+          maxW="100%"
+          mx="auto"
+        >
+          <Flex 
+            width="100%"
             maxW="100%"
             mx="auto"
+            alignItems="center" 
+            textAlign="center"
           >
-            <Flex 
-              width="100%"
-              maxW="100%"
-              mx="auto"
-              alignItems="center" 
-              textAlign="center"
-            >
-              <Box position="absolute" left="3" top="50%" transform="translateY(-50%)">
-                <FaEnvelope color="#36b0e2" />
-              </Box>
-              <ChakraInput
-                name="verificationCode"
-                placeholder="Enter verification code"
-                height={{ base: "40px", sm: "45px", md: "50px" }}
-                borderColor="#36b0e2"
-                pl={{ base: 8, sm: 10 }}
-                value={formData.verificationCode}
-                onChange={handleChange}
-                fontSize={{ base: "14px", sm: "15px", md: "16px" }}
-                _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
-              />
-            </Flex>
-          </InputGroup>
-
-          <Flex 
-            gap={2} 
-            direction={{ base: "column", sm: "row" }}
-            alignItems={{ base: "flex-start", sm: "center" }}
-          >
-            {verifyError && (
-              <Alert status="error" borderRadius="md" mb={4}>
-                <AlertIcon />
-                <AlertTitle mr={2}>Doğrulama Hatası!</AlertTitle>
-                <AlertDescription>{verifyError}</AlertDescription>
-              </Alert>
-            )}
-            <Button
-              onClick={handleVerify}
-              colorScheme="blue"
-              width="100%"
-              loading={loading}
-              mb={4}
-              disabled={!!verifyError}
-            >
-              Verify
-            </Button>
-            {isSuccess && (
-              <Alert status="success" borderRadius="md" mt={4}>
-                <AlertIcon />
-                <AlertTitle mr={2}>Kayıt tamamlandı!</AlertTitle>
-                <AlertDescription>Lütfen e-posta adresinizi doğrulayın.</AlertDescription>
-              </Alert>
-            )}
-            <Button
-              onClick={sendEmailCode}
-              variant="ghost"
-              color="blue.400"
-              fontSize={{ base: "xs", sm: "sm" }}
-              _hover={{ color: '#36b0e2' }}
-            >
-              Resend Code
-            </Button>
+            <Box position="absolute" left="3" top="50%" transform="translateY(-50%)">
+              <FaEnvelope color="#36b0e2" />
+            </Box>
+            <ChakraInput
+              name="verificationCode"
+              placeholder="Enter verification code"
+              height={{ base: "40px", sm: "45px", md: "50px" }}
+              borderColor={
+                isSuccess ? 'green.500' : 
+                verifyError ? 'red.500' : '#36b0e2'
+              }
+              pl={{ base: 8, sm: 10 }}
+              value={formData.verificationCode}
+              onChange={(e) => {
+                handleChange(e);
+                // Kullanıcı tekrar yazmaya başladığında durumu sıfırla
+                if (verificationStatus !== 'idle') {
+                  setVerificationStatus('idle');
+                  setVerificationMessage('');
+                  setVerifyError('');
+                  setIsSuccess(false);
+                }
+              }}
+              fontSize={{ base: "14px", sm: "15px", md: "16px" }}
+              _focus={{ 
+                borderColor: isSuccess ? 'green.500' : 
+                            verifyError ? 'red.500' : '#36b0e2',
+                boxShadow: isSuccess ? '0 0 0 1px green.500' : 
+                          verifyError ? '0 0 0 1px red.500' : '0 0 0 1px #36b0e2'
+              }}
+            />
           </Flex>
-        </Box>
-      )}
+        </InputGroup>
+
+        <Flex 
+          gap={2} 
+          direction={{ base: "column", sm: "row" }}
+          alignItems={{ base: "flex-start", sm: "center" }}
+        >
+          <Button
+            onClick={handleVerify}
+            colorScheme={isSuccess ? 'green' : 'blue'}
+            width="100%"
+            loading={loading}
+            loadingText="Doğrulanıyor..."
+            mb={4}
+            disabled={isSuccess}
+          >
+            {verificationStatus === 'success' ? 'Doğrulandı!' : 'Doğrula'}
+          </Button>
+          
+          <Button
+            onClick={async () => {
+              setLoading(true);
+              await sendEmailCode();
+              setLoading(false);
+            }}
+            variant="ghost"
+            color="blue.400"
+            fontSize={{ base: "xs", sm: "sm" }}
+            _hover={{ color: '#36b0e2' }}
+            loading={loading}
+            loadingText="Gönderiliyor..."
+          >
+            Kodu Tekrar Gönder
+          </Button>
+        </Flex>
+      </Box>
+    )}
 
       <Flex 
         mt={{ base: 4, sm: 5, md: 6 }} 
