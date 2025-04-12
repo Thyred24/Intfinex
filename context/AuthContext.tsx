@@ -35,25 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (userData: UserData) => {
-    // Production için domain ayarı ekle
-    const domain = process.env.NEXT_PUBLIC_VERCEL_URL 
-      ? '; domain=.vercel.app'  // Vercel domain
-      : '';
-
-    // Cookie'yi güvenli şekilde ayarla
-    document.cookie = `userData=${JSON.stringify(userData)}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax${domain}`;
+    document.cookie = `userData=${JSON.stringify(userData)}; path=/; max-age=${7 * 24 * 60 * 60}`;
     setIsAuthenticated(true);
     router.push('/dashboard');
   };
 
   const logout = () => {
-    const domain = process.env.NEXT_PUBLIC_VERCEL_URL
-      ? '; domain=.vercel.app'  // Vercel domain
-      : '';
-
-    // Cookie'leri temizle
-    document.cookie = `userData=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax${domain}`;
-    document.cookie = `userEmail=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax${domain}`;
+    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    document.cookie = 'userEmail=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
     setIsAuthenticated(false);
     router.push('/');
   };
