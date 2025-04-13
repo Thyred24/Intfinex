@@ -1,4 +1,6 @@
-import React, { useEffect, useRef, memo } from 'react';
+'use client' // Required for Next.js 13+ with App Router
+
+import React, { useEffect, useRef, memo, useState } from 'react';
 
 interface TradingViewConfig {
   container_id: string;
@@ -31,17 +33,46 @@ declare global {
 
 function TradingViewWidget() {
   const container = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({
+    width: '100%',
+    height: '500px'
+  });
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (typeof window !== 'undefined') {
+        const isMobile = window.innerWidth < 768;
+        setDimensions({
+          width: '100%',
+          height: isMobile ? '300px' : '500px'
+        });
+      }
+    };
+
+    // Set initial dimensions
+    updateDimensions();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', updateDimensions);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/tv.js";
     script.async = true;
+    
+    // Store the current container reference
+    const currentContainer = container.current;
+    
     script.onload = () => {
-      if (container.current) {
+      if (currentContainer && window.TradingView) {
         new window.TradingView.widget({
-          container_id: "tradingview_widget", 
-          height: "500px",
-          width: "100%",
+          container_id: "tradingview_widget",
+          height: dimensions.height,
+          width: dimensions.width,
           symbol: "CAPITALCOM:DXY",
           interval: "D",
           timezone: "Etc/UTC",
@@ -63,15 +94,28 @@ function TradingViewWidget() {
         });
       }
     };
-      if (container.current) {
-        container.current.appendChild(script);
+
+    if (currentContainer) {
+      currentContainer.appendChild(script);
+    }
+
+    return () => {
+      if (currentContainer && currentContainer.contains(script)) {
+        currentContainer.removeChild(script);
       }
-    },
-    []
-  );
+    };
+  }, [dimensions]);
 
   return (
-    <div id="tradingview_widget" ref={container} style={{ height: "100%", width: "100%" }} />
+    <div 
+      id="tradingview_widget" 
+      ref={container} 
+      style={{ 
+        height: dimensions.height, 
+        width: dimensions.width,
+        minHeight: '300px' // Ensures minimum height on mobile
+      }} 
+    />
   );
 }
 

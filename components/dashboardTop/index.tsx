@@ -128,27 +128,54 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
         <Flex
           direction="column"
           gap={4}
-          display={{ base: 'flex', lg: 'none' }}  // lg (992px) ve üzerinde gizle
+          display={{ base: 'flex', lg: 'none' }}
           alignItems="center"
+          width="100%"
         >
-          <Button 
-            fontSize={{ base: 'sm', md: 'md' }}
-            alignItems="center"
-            backgroundImage={activeView === 'dashboard' ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
-            backgroundRepeat="no-repeat"
-            backgroundSize="100% 2px, 2px 100%"
-            boxShadow={activeView === 'dashboard' ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
-            p="8px 16px"
-            borderRadius={10}
-            transition="all 0.3s ease"
-            zIndex={1}
-            w="full"
-            maxW="200px"
-            cursor="pointer"
-            onClick={() => onViewChange('dashboard')}
-          >
-            Dashboard
-          </Button>
+          <Flex width="100%" gap={4} justifyContent="center">
+            <Button 
+              fontSize={{ base: 'sm', md: 'md' }}
+              alignItems="center"
+              backgroundImage={activeView === 'dashboard' ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
+              backgroundRepeat="no-repeat"
+              backgroundSize="100% 2px, 2px 100%"
+              boxShadow={activeView === 'dashboard' ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
+              p="8px 16px"
+              borderRadius={10}
+              transition="all 0.3s ease"
+              zIndex={1}
+              flex="1"
+              maxW="200px"
+              cursor="pointer"
+              onClick={() => onViewChange('dashboard')}
+              color="white"
+              bg="transparent"
+              _hover={{ opacity: 0.8 }}
+            >
+              Dashboard
+            </Button>
+            <Button 
+              fontSize={{ base: 'sm', md: 'md' }}
+              alignItems="center"
+              backgroundImage={activeView === 'financial' ? "linear-gradient(to left, #000, rgba(54, 176, 226, 0.8), #000)" : "none"}
+              backgroundRepeat="no-repeat"
+              backgroundSize="100% 2px, 2px 100%"
+              boxShadow={activeView === 'financial' ? "0px -10px 20px 0px inset rgba(54, 176, 226, 0.5)" : "none"}
+              p="8px 16px"
+              borderRadius={10}
+              transition="all 0.3s ease"
+              zIndex={1}
+              flex="1"
+              maxW="200px"
+              cursor="pointer"
+              onClick={() => onViewChange('financial')}
+              color="white"
+              bg="transparent"
+              _hover={{ opacity: 0.8 }}
+            >
+              Financial
+            </Button>
+          </Flex>
           <Text 
             fontSize="14px"
             fontWeight={300}

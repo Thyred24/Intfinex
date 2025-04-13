@@ -1,3 +1,5 @@
+'use client'
+
 import { Box, Flex, Text, Link, Icon, Stack } from '@chakra-ui/react';
 import { FaTwitter, FaDiscord, FaGithub, FaLinkedin } from 'react-icons/fa';
 import { FiMail } from 'react-icons/fi';

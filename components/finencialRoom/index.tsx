@@ -73,14 +73,18 @@ function FinancialRoom() {
             borderRadius="10px"
             p={{ base: 4, md: 6, lg: 10 }}
             mt={10}
-            height="600px"
+            height={{ base: '400px', md: '500px', lg: '600px' }}
             width="100%"
           >
             <TradingViewWidget /> 
           </Box>
 
           {/* Authentication & Rate Limits Section */}
-          <Flex gap={8} mt={10}>
+          <Flex 
+            direction={{ base: 'column', lg: 'row' }} 
+            gap={{ base: 4, lg: 8 }} 
+            mt={{ base: 6, lg: 10 }}
+          >
             <Box
               position="relative"
               backgroundColor="transparent"
@@ -92,6 +96,7 @@ function FinancialRoom() {
               borderRadius="10px"
               p={{ base: 4, md: 6, lg: 10 }}
               width="100%"
+              minH={{ base: '300px', md: '400px' }}
             >
               <TradingViewEventsWidget />
             </Box>
@@ -106,6 +111,7 @@ function FinancialRoom() {
               boxShadow="0px -5px 10px 0px inset rgba(54, 176, 226, 0.5)"
               borderRadius="10px"
               p={{ base: 4, md: 6, lg: 10 }}
+              width={{ base: '100%', lg: '40%' }}
             >
               <Text fontSize="20px" fontWeight="bold" mb={4} color="white">
                 Rate Limits

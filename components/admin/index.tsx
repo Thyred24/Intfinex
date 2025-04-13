@@ -8,6 +8,7 @@ import { useToast } from '@chakra-ui/toast'
 import { useDisclosure } from '@chakra-ui/hooks'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useCallback } from 'react'
+import { environment } from '@/app/config/environment'
 
 // API endpoint sabitleri
 const API_ENDPOINTS = {
@@ -18,6 +19,7 @@ const API_ENDPOINTS = {
 } as const;
 
 interface User {
+  id: string; // UUID formatında kullanıcı ID'si
   uniqueId: string;
   name: string;
   email: string;
@@ -26,6 +28,13 @@ interface User {
   registerDate?: string;
   emailVerification?: boolean;
   smsVerification?: boolean;
+  isEmailApproved?: boolean;
+  accountAgent?: string;
+  status?: string;
+  document?: string;
+  services?: string;
+  security?: string;
+  documents?: string;
 }
 
 interface ApiResponse<T> {
@@ -41,11 +50,33 @@ interface ApiUser extends Omit<User, 'emailVerification' | 'smsVerification'> {
 
 // Token yönetimi için yardımcı fonksiyonlar
 const getAuthToken = () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    console.log('[Admin] localStorage içeriği:', {
+        userData: localStorage.getItem('userData'),
+        userEmail: localStorage.getItem('userEmail')
+    });
+
+    const userDataStr = localStorage.getItem('userData');
+    if (!userDataStr) {
+        console.error('[Admin] userData bulunamadı');
         throw new Error('Token bulunamadı');
     }
-    return token;
+
+    try {
+        const userData = JSON.parse(userDataStr);
+        console.log('[Admin] Parse edilen userData:', userData);
+
+        if (!userData.data || !userData.data[0]) {
+            console.error('[Admin] Token verisi bulunamadı');
+            throw new Error('Token bulunamadı');
+        }
+
+        const token = userData.data[0];
+        console.log('[Admin] Kullanılacak token:', token);
+        return token;
+    } catch (error) {
+        console.error('[Admin] Token parse hatası:', error);
+        throw new Error('Token formatı geçersiz');
+    }
 };
 
 const createAuthHeaders = (token: string) => ({
@@ -57,6 +88,7 @@ function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [adminName, setAdminName] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
+    const [emailValidation, setEmailValidation] = useState<boolean>(environment.emailValidation);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const router = useRouter();
@@ -64,15 +96,30 @@ function Admin() {
 
     // API çağrısı için yardımcı fonksiyon
     const makeApiCall = useCallback(async <T,>(url: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
+        console.log('[Admin] API çağrısı başlıyor:', url);
         try {
             const token = getAuthToken();
+            console.log('[Admin] Token alındı:', token);
+            
+            const headers = createAuthHeaders(token);
+            console.log('[Admin] Oluşturulan headers:', headers);
+            
             const response = await fetch(url, {
                 ...options,
-                headers: createAuthHeaders(token)
+                headers: {
+                    ...createAuthHeaders(token),
+                    ...(options.headers || {})
+                }
+            });
+
+            console.log('[Admin] API yanıtı:', {
+                status: response.status,
+                statusText: response.statusText
             });
 
             if (!response.ok) {
-                throw new Error('API yanıtı başarısız');
+                console.error('[Admin] API hata yanıtı:', response.status, response.statusText);
+                throw new Error(`API yanıtı başarısız: ${response.status} ${response.statusText}`);
             }
 
             const result = await response.json();
@@ -139,46 +186,6 @@ function Admin() {
         router.push('/');
     };
 
-    // Doğrulama durumu güncelleme
-    const handleVerificationToggle = useCallback(async (userId: string, type: 'email' | 'sms', currentState: boolean) => {
-        try {
-            await makeApiCall(API_ENDPOINTS.UPDATE_VERIFICATION, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    userId,
-                    type,
-                    state: !currentState
-                })
-            });
-
-            setUsers(users.map(user => {
-                if (user.uniqueId === userId) {
-                    return {
-                        ...user,
-                        [type === 'email' ? 'emailVerification' : 'smsVerification']: !currentState
-                    };
-                }
-                return user;
-            }));
-
-            toast({
-                title: 'Başarılı',
-                description: 'Doğrulama durumu güncellendi',
-                status: 'success',
-                duration: 2000,
-                isClosable: true,
-            });
-        } catch {
-            toast({
-                title: 'Hata',
-                description: 'Doğrulama durumu güncellenirken bir hata oluştu',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
-        }
-    }, [makeApiCall, users, setUsers, toast]);
-
     // Edit User fonksiyonu
     const handleEditUser = useCallback(async (userId: string) => {
         const user = users.find(u => u.uniqueId === userId);
@@ -188,67 +195,118 @@ function Admin() {
         }
     }, [users, setSelectedUser, onOpen]);
 
-    // Update User fonksiyonu
-    const handleUpdateUser = useCallback(async () => {
+    const handleUpdateUser = async () => {
         if (!selectedUser) return;
 
         try {
-            await makeApiCall(API_ENDPOINTS.UPDATE_USER, {
+            // Tüm kullanıcı alanlarını içeren güncelleme verisi
+            const updateData = {
+                id: selectedUser.id,
+                uniqueId: selectedUser.uniqueId,
+                name: selectedUser.name,
+                email: selectedUser.email,
+                phoneNumber: selectedUser.phoneNumber,
+                userLevel: selectedUser.userLevel,
+                accountAgent: selectedUser.accountAgent,
+                status: selectedUser.status,
+                document: selectedUser.document,
+                services: selectedUser.services,
+                security: selectedUser.security,
+                documents: selectedUser.documents,
+                emailVerification: selectedUser.emailVerification,
+                smsVerification: selectedUser.smsVerification
+            };
+
+            const response = await makeApiCall(API_ENDPOINTS.UPDATE_USER, {
                 method: 'PUT',
-                body: JSON.stringify(selectedUser)
+                body: JSON.stringify(updateData)
             });
 
-            setUsers(users.map(user => 
-                user.uniqueId === selectedUser.uniqueId ? selectedUser : user
-            ));
-
-            toast({
-                title: 'Başarılı',
-                description: 'Kullanıcı güncellendi',
-                status: 'success',
-                duration: 2000,
-                isClosable: true,
-            });
-            onClose();
-        } catch {
+            if (response.isSuccess) {
+                toast({
+                    title: 'Başarılı',
+                    description: 'Kullanıcı bilgileri güncellendi',
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true,
+                });
+                onClose();
+                // Kullanıcı listesini yenile
+                fetchUsers();
+            } else {
+                toast({
+                    title: 'Hata',
+                    description: 'Kullanıcı güncellenemedi',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+        } catch (error) {
+            console.error('Update user error:', error);
             toast({
                 title: 'Hata',
-                description: 'Kullanıcı güncellenirken bir hata oluştu',
+                description: 'Kullanıcı güncellenemedi',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
             });
         }
-    }, [selectedUser, makeApiCall, users, setUsers, toast, onClose]);
+    };
 
     // Delete User fonksiyonu
-    const handleDeleteUser = useCallback(async (userId: string) => {
-        if (!window.confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?')) return;
+    const handleDeleteUser = async (user: User) => {
+        if (!user.id) { // uniqueId yerine id kullanın
+        toast({
+            title: 'Hata',
+            description: 'Kullanıcı ID bulunamadı',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+        });
+        return;
+    }
+
+        if (!window.confirm(`${user.name} adlı kullanıcıyı silmek istediğinizden emin misiniz?`)) return;
 
         try {
-            await makeApiCall(API_ENDPOINTS.DELETE_USER, {
-                method: 'DELETE',
-                body: JSON.stringify({ uniqueId: userId })
-            });
+        const response = await makeApiCall<ApiResponse<void>>(API_ENDPOINTS.DELETE_USER, {
+            method: 'DELETE',
+            body: JSON.stringify({
+                id: user.id // UUID formatındaki ID'yi gönderin
+            })
+        });
 
-            setUsers(users.filter(user => user.uniqueId !== userId));
-            toast({
-                title: 'Başarılı',
-                description: 'Kullanıcı silindi',
-                status: 'success',
-                duration: 2000,
-                isClosable: true,
-            });
-        } catch {
+            if (response.isSuccess) {
+                toast({
+                    title: 'Başarılı',
+                    description: 'Kullanıcı silindi',
+                    status: 'success',
+                    duration: 3000,
+                    isClosable: true,
+                });
+                // Refresh user list
+                fetchUsers();
+            } else {
+                toast({
+                    title: 'Hata',
+                    description: 'Kullanıcı silinemedi',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                });
+            }
+        } catch (error) {
+            console.error('Delete user error:', error);
             toast({
                 title: 'Hata',
-                description: 'Kullanıcı silinirken bir hata oluştu',
+                description: 'Kullanıcı silinemedi',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
             });
         }
-    }, [makeApiCall, users, setUsers, toast]);
+    };
 
     if (loading) {
         return <Text color="white">Yükleniyor...</Text>;
@@ -262,7 +320,7 @@ function Admin() {
                 </Text>
                 <Flex alignItems="center" gap={4}>
                     <Text fontSize="24px" color="white">
-                        Welcome, <span style={{
+                        <span style={{
                             background: 'linear-gradient(to right, #ffffff, #36b0e2)',
                             backgroundClip: 'text',
                             WebkitBackgroundClip: 'text',
@@ -288,20 +346,19 @@ function Admin() {
                     _hover={{ bg: "rgba(0, 0, 0, 0.4)" }}
                     transition="all 0.3s"
                 >
-                    <Text fontSize="xl" color="white" mb={4}>Email Verification</Text>
+                    <Text fontSize="xl" color="white" mb={4}>SMS Verification</Text>
                     <Flex justifyContent="space-between" alignItems="center">
                         <Text color="gray.300">Global Status</Text>
                         <Button
                             size="lg"
                             colorScheme="teal"
                             variant="outline"
-                            _hover={{ bg: 'teal.900' }}
+                            _hover={{ bg: '#36b0e2' }}
                         >
                             Turn Off All
                         </Button>
                     </Flex>
                 </Box>
-
                 <Box
                     bg="rgba(0, 0, 0, 0.3)"
                     p={6}
@@ -310,95 +367,100 @@ function Admin() {
                     _hover={{ bg: "rgba(0, 0, 0, 0.4)" }}
                     transition="all 0.3s"
                 >
-                    <Text fontSize="xl" color="white" mb={4}>SMS Verification</Text>
+                    <Text fontSize="xl" color="white" mb={4}>Email Verification</Text>
                     <Flex justifyContent="space-between" alignItems="center">
                         <Text color="gray.300">Global Status</Text>
-                        <Button
-                            size="lg"
-                            colorScheme="teal"
-                            variant="outline"
-                            _hover={{ bg: 'teal.900' }}
-                        >
-                            Turn Off All
-                        </Button>
+                        <Box>
+                            <Button
+                                size="lg"
+                                colorScheme="teal"
+                                variant="outline"
+                                _hover={{ bg: '#36b0e2' }}
+                                onClick={async () => {
+                                    try {
+                                        const newValidation = !emailValidation;
+                                        environment.emailValidation = newValidation;
+                                        setEmailValidation(newValidation);
+                                        
+                                        toast({
+                                            title: 'Başarılı',
+                                            description: `Email doğrulaması ${newValidation ? 'aktif' : 'pasif'} edildi`,
+                                            status: 'success',
+                                            duration: 3000,
+                                            isClosable: true,
+                                        });
+                                    } catch (error) {
+                                        console.error('Email validation toggle error:', error);
+                                        toast({
+                                            title: 'Hata',
+                                            description: 'Email doğrulama durumu değiştirilemedi',
+                                            status: 'error',
+                                            duration: 3000,
+                                            isClosable: true,
+                                        });
+                                    }
+                                }}
+                            >
+                                {emailValidation ? 'Turn Off All' : 'Turn On All'}
+                            </Button>
+                            <Text color="gray.400" mt={2} fontSize="sm">
+                                Current Status: {emailValidation ? 'Active' : 'Inactive'}
+                            </Text>
+                        </Box>
                     </Flex>
                 </Box>
             </Flex>
 
-            <Box
-                bg="rgba(0, 0, 0, 0.5)"
-                backdropFilter="blur(10px)"
-                borderRadius="xl"
-                overflowX="auto"
-                p={6}
-                mb={6}
-            >
-                <Flex justifyContent="space-between" alignItems="center" mb={6}>
-                    <Text fontSize="2xl" color="white">Users Management</Text>
-                    <Flex gap={4}>
-                        <Button
-                            size="md"
-                            colorScheme="teal"
-                            variant="outline"
-                            _hover={{ bg: 'teal.900' }}
-                        >
-                            Export Users
-                        </Button>
-                        <Button
-                            size="md"
-                            colorScheme="teal"
-                            _hover={{ bg: 'teal.600' }}
-                        >
-                            Add New User
-                        </Button>
-                    </Flex>
-                </Flex>
-                <Grid templateColumns="repeat(9, 1fr)" gap={4} color="gray.300" fontWeight="bold" mb={4} bg="rgba(0, 0, 0, 0.2)" p={4} borderRadius="lg">
-                    <GridItem>ID</GridItem>
-                    <GridItem>Name</GridItem>
-                    <GridItem>Email</GridItem>
-                    <GridItem>Phone</GridItem>
-                    <GridItem>Register Date</GridItem>
-                    <GridItem>Status</GridItem>
-                    <GridItem>Verification</GridItem>
-                    <GridItem>Edit</GridItem>
-                    <GridItem>Delete</GridItem>
-                </Grid>
-                <Flex direction="column" gap={4}>
+            <Box bg="rgba(0, 0, 0, 0.3)" p={6} borderRadius="xl" mb={6}>
+                <Box mb={4}>
+                    <Grid
+                        templateColumns="repeat(6, 1fr)"
+                        gap={4}
+                        p={4}
+                        borderBottom="2px solid rgba(54, 176, 226, 0.5)"
+                        color="white"
+                        fontWeight="bold"
+                    >
+                        <GridItem>ID</GridItem>
+                        <GridItem>Name</GridItem>
+                        <GridItem>Email</GridItem>
+                        <GridItem>Verification</GridItem>
+                        <GridItem>Edit</GridItem>
+                        <GridItem>Delete</GridItem>
+                    </Grid>
+                </Box>
+
+                <Box mt={4}>
                     {users.map((user) => (
                         <Box
                             key={user.uniqueId}
                             bg="rgba(0, 0, 0, 0.3)"
                             p={4}
+                            mb={2}
                             borderRadius="lg"
                             _hover={{ bg: "rgba(0, 0, 0, 0.4)" }}
                             transition="all 0.3s"
                         >
-                            <Grid templateColumns="repeat(9, 1fr)" gap={4} alignItems="center">
-                                <GridItem color="white" fontSize="sm">{user.uniqueId}</GridItem>
-                                <GridItem color="white">{user.name}</GridItem>
-                                <GridItem color="white">{user.email}</GridItem>
-                                <GridItem color="white">{user.phoneNumber || 'N/A'}</GridItem>
-                                <GridItem color="white">{user.registerDate || 'N/A'}</GridItem>
-                                <GridItem color="white">{user.userLevel || 'N/A'}</GridItem>
-                                <GridItem>
-                                    <Flex gap={2}>
-                                        <Box
-                                            bg={user.emailVerification === true ? "green.500" : "red.500"}
-                                            color="white"
-                                            px={2}
-                                            py={1}
-                                            borderRadius="md"
-                                            fontSize="xs"
-                                            display="flex"
-                                            alignItems="center"
-                                            title={user.emailVerification === true ? "Email Verified" : "Email Not Verified"}
-                                        >
-                                            Email
-                                        </Box>
-                                    </Flex>
+                            <Grid
+                                templateColumns="repeat(6, 1fr)"
+                                gap={4}
+                                alignItems="center"
+                            >
+                                <GridItem color="white">
+                                    <Text>{user.uniqueId}</Text>
                                 </GridItem>
                                 <GridItem color="white">
+                                    <Text>{user.name}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text>{user.email}</Text>
+                                </GridItem>
+                                <GridItem>
+                                    <Text p={2} w= "50%" textAlign="center" borderRadius="lg" fontSize="xs" bg={user.isEmailApproved ? 'green' : 'red'}>
+                                        Email Verification
+                                    </Text>
+                                </GridItem>
+                                <GridItem>
                                     <Button
                                         size="sm"
                                         colorScheme="teal"
@@ -409,62 +471,140 @@ function Admin() {
                                         Edit
                                     </Button>
                                 </GridItem>
-                                <GridItem color="white">
+                                <GridItem>
                                     <Button
                                         size="sm"
                                         colorScheme="red"
                                         variant="outline"
                                         _hover={{ bg: 'red.900' }}
-                                        onClick={() => handleDeleteUser(user.uniqueId)}
-                                    >
+                                        onClick={() => handleDeleteUser(user)}>
                                         Delete
                                     </Button>
                                 </GridItem>
                             </Grid>
                         </Box>
                     ))}
-                </Flex>
+                </Box>
             </Box>
 
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Edit User</ModalHeader>
+            <Modal isOpen={isOpen} onClose={onClose} size="xl">
+                <ModalOverlay
+                    bg="blackAlpha.700"
+                    backdropFilter="blur(10px)"
+                />
+                <ModalContent
+                    bg="rgba(0, 0, 0, 0.8)"
+                    border="1px solid rgba(54, 176, 226, 0.5)"
+                    borderRadius="xl"
+                    p={4}
+                >
+                    <ModalHeader>Kullanıcı Düzenle</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <FormControl>
-                            <FormLabel>Name</FormLabel>
-                            <Input type="text" value={selectedUser?.name || ''} onChange={(e) => selectedUser && setSelectedUser({...selectedUser, name: e.target.value})} />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Email</FormLabel>
-                            <Input type="email" value={selectedUser?.email || ''} onChange={(e) => selectedUser && setSelectedUser({...selectedUser, email: e.target.value})} />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Phone Number</FormLabel>
-                            <Input type="text" value={selectedUser?.phoneNumber || ''} onChange={(e) => selectedUser && setSelectedUser({...selectedUser, phoneNumber: e.target.value})} />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Email Verification</FormLabel>
-                            <Switch
-                                isChecked={selectedUser?.emailVerification || false}
-                                onChange={() => selectedUser && handleVerificationToggle(selectedUser.uniqueId, 'email', !!selectedUser.emailVerification)}
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>SMS Verification</FormLabel>
-                            <Switch
-                                isChecked={selectedUser?.smsVerification || false}
-                                onChange={() => selectedUser && handleVerificationToggle(selectedUser.uniqueId, 'sms', !!selectedUser.smsVerification)}
-                            />
-                        </FormControl>
+                        <Grid templateColumns="repeat(2, 1fr)" gap={4}>
+                            <FormControl>
+                                <FormLabel>Ad</FormLabel>
+                                <Input
+                                    value={selectedUser?.name || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Email</FormLabel>
+                                <Input
+                                    value={selectedUser?.email || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, email: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Telefon</FormLabel>
+                                <Input
+                                    value={selectedUser?.phoneNumber || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, phoneNumber: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Kullanıcı Seviyesi</FormLabel>
+                                <Input
+                                    value={selectedUser?.userLevel || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, userLevel: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Hesap Yöneticisi</FormLabel>
+                                <Input
+                                    value={selectedUser?.accountAgent || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, accountAgent: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Durum</FormLabel>
+                                <Input
+                                    value={selectedUser?.status || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, status: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Doküman</FormLabel>
+                                <Input
+                                    value={selectedUser?.document || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, document: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Servisler</FormLabel>
+                                <Input
+                                    value={selectedUser?.services || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, services: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Güvenlik</FormLabel>
+                                <Input
+                                    value={selectedUser?.security || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, security: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Dokümanlar</FormLabel>
+                                <Input
+                                    value={selectedUser?.documents || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, documents: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Email Doğrulama</FormLabel>
+                                <Switch
+                                    isChecked={selectedUser?.emailVerification || false}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, emailVerification: e.target.checked } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>SMS Doğrulama</FormLabel>
+                                <Switch
+                                    isChecked={selectedUser?.smsVerification || false}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, smsVerification: e.target.checked } : null)}
+                                />
+                            </FormControl>
+                        </Grid>
                     </ModalBody>
                     <ModalFooter>
                         <Button colorScheme="blue" mr={3} onClick={handleUpdateUser}>
-                            Save
+                            Kaydet
                         </Button>
                         <Button variant="ghost" onClick={onClose}>
-                            Cancel
+                            İptal
                         </Button>
                     </ModalFooter>
                 </ModalContent>

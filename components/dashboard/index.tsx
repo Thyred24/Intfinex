@@ -124,6 +124,13 @@ function Dashboard() {
 
         if (currentUser) {
           setUser(currentUser);
+
+          // Check if user is admin and redirect
+          if (currentUser.userLevel === 'Admin') {
+            router.push('/admin');
+            return;
+          }
+
           toast({
             title: 'Başarılı',
             description: 'Hoş geldiniz!',
@@ -175,7 +182,7 @@ function Dashboard() {
     { name: "Phone", data: user.phoneNumber || "Not Provided" },
     { name: "Security", data: user.security || "Password" },
     { name: "Agent", data: user.accountAgent || "Global Team" },
-    { name: "Statu", data: user.status || "Basic" },
+    { name: "Statu", data: user.userLevel || "Basic" },
     { name: "Document", data: user.document || "N/A" },
     { name: "Service", data: user.services || "N/A" },
     { name: "Registration", data: user.createdDate || "Unknown" },

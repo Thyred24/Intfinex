@@ -89,6 +89,16 @@ export default function RegisterInput(props: StackProps) {
         });
         return false;
       }
+      if (formData.phoneNumber && formData.phoneNumber.length !== 10) {
+        toast({
+          title: 'Error',
+          description: 'Phone number must be exactly 10 digits',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return false;
+      }
 
       if (formData.password.length < 6) {
         toast({
@@ -223,7 +233,8 @@ export default function RegisterInput(props: StackProps) {
         });
 
         setTimeout(() => {
-          window.location.href = '/';
+          // Redirect to the user's dashboard after successful verification
+          window.location.href = '/dashboard';
         }, 1500);
 
         return true;
@@ -541,6 +552,16 @@ return (
                     borderColor: '#36b0e2'
                   }}
                 />
+                {name === 'phoneNumber' && formData.phoneNumber && formData.phoneNumber.length !== 10 && (
+                  <Text color="red.500" fontSize="sm" mt={1} ml={1}>
+                    10 Character
+                  </Text>
+                )}
+                {name === 'password' && formData.password && formData.password.length < 6 && (
+                  <Text color="red.500" fontSize="sm" mt={1} ml={1}>
+                    Min 6 Character
+                  </Text>
+                )}
                 </Flex>
               </InputGroup>
             ))}

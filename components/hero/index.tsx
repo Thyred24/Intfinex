@@ -17,7 +17,9 @@ function Hero() {
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const toast = useToast();
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
@@ -32,6 +34,7 @@ function Hero() {
     }
   
     setIsLoading(true);
+    setErrorMessage('');
     
     try {
       const response = await fetch("https://intfinex.azurewebsites.net/api/Login/Login", {
@@ -46,22 +49,32 @@ function Hero() {
       console.log("Gelen veri:", result);
 
       if (result.isSuccess) {
-        console.log('Login başarılı, gelen veri:', result);
-        // Role göre yönlendirme
-        // Kullanıcı bilgilerini localStorage'a kaydet
+        toast({
+          title: 'Başarılı',
+          description: 'Login successful, you are being redirected...',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+        setIsSuccess(true);
         localStorage.setItem('userData', JSON.stringify(result));
         localStorage.setItem('userEmail', formData.email);
-        console.log('LocalStorage kayıt sonrası:', {
-          userData: localStorage.getItem('userData'),
-          userEmail: localStorage.getItem('userEmail')
-        });
-        if (result.role === 'admin') {
-          window.location.href = '/admin';
-        } else {
-          window.location.href = '/dashboard';
-        }
+      
+        // Kısa bir gecikme ile yönlendirme yapalım ki kullanıcı başarılı mesajını görebilsin
+        setTimeout(() => {
+          // Check userLevel for redirection
+          if (result.userLevel === 'Admin') {
+            window.location.href = '/admin';
+          } else if (result.userLevel === 'Premium') {
+            window.location.href = '/dashboard?premium=true';
+          } else {
+            // Basic users
+            window.location.href = '/dashboard';
+          }
+        }, 1000);
       } else {
-        throw new Error(result.message || 'Login failed');
+        setErrorMessage(result.message || 'User email/password is not correct!');
+        setIsSuccess(false);
       }
     } catch (error) {
       toast({
@@ -165,6 +178,20 @@ function Hero() {
                     onChange={(value) => setFormData({...formData, password: value})}
                   />
                 </Box>
+                {isSuccess && (
+                  <Box mb={{ base: 2, md: 4 }} textAlign="center">
+                    <Text color="green.500" fontSize="sm">
+                      Login successful, you are being redirected...
+                    </Text>
+                  </Box>
+                )}
+                {errorMessage && (
+                  <Box mb={{ base: 2, md: 4 }} textAlign="center">
+                    <Text color="red.500" fontSize="sm">
+                      {errorMessage}
+                    </Text>
+                  </Box>
+                )}
                 <Flex 
                   justifyContent="space-between" 
                   width="100%"
