@@ -196,111 +196,128 @@ function Admin() {
     }, [users, setSelectedUser, onOpen]);
 
     const handleUpdateUser = async () => {
-        if (!selectedUser) return;
+        if (!selectedUser) {
+            console.warn('[UpdateUser] Seçili kullanıcı yok.');
+            return;
+        }
+      
+        const updateData = {
+          id: selectedUser.id,
+          email: selectedUser.email,
+          name: selectedUser.name,
+          surname: selectedUser.name,
+          uniqueId: selectedUser.uniqueId,
+          phoneNumber: selectedUser.phoneNumber,
+          userLevel: selectedUser.userLevel,
+          accountAgent: selectedUser.accountAgent,
+          document: selectedUser.document,
+          services: selectedUser.services
+        };
 
+        const token = getAuthToken();
+
+        const url = `https://intfinex.azurewebsites.net/api/User/Update/${selectedUser.id}`;
+
+        console.log('[UpdateUser] Güncelleme URL:', url);
+        console.log('[UpdateUser] Gönderilen token:', token);
+        console.log('[UpdateUser] Body:', updateData);
+      
         try {
-            // Tüm kullanıcı alanlarını içeren güncelleme verisi
-            const updateData = {
-                id: selectedUser.id,
-                uniqueId: selectedUser.uniqueId,
-                name: selectedUser.name,
-                email: selectedUser.email,
-                phoneNumber: selectedUser.phoneNumber,
-                userLevel: selectedUser.userLevel,
-                accountAgent: selectedUser.accountAgent,
-                status: selectedUser.status,
-                document: selectedUser.document,
-                services: selectedUser.services,
-                security: selectedUser.security,
-                documents: selectedUser.documents,
-                emailVerification: selectedUser.emailVerification,
-                smsVerification: selectedUser.smsVerification
-            };
-
-            const response = await makeApiCall(API_ENDPOINTS.UPDATE_USER, {
-                method: 'PUT',
-                body: JSON.stringify(updateData)
-            });
-
-            if (response.isSuccess) {
-                toast({
-                    title: 'Başarılı',
-                    description: 'Kullanıcı bilgileri güncellendi',
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                });
-                onClose();
-                // Kullanıcı listesini yenile
-                fetchUsers();
-            } else {
-                toast({
-                    title: 'Hata',
-                    description: 'Kullanıcı güncellenemedi',
-                    status: 'error',
-                    duration: 3000,
-                    isClosable: true,
-                });
+          const response = await fetch(
+            url,
+            {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+              body: JSON.stringify(updateData)
             }
+          );
+      
+          console.log('[UpdateUser] HTTP Durum Kodu:', response.status);
+          const result = await response.json();
+          console.log('[UpdateUser] API Yanıtı:', result);
+      
+          if (result.isSuccess) {
+            toast({
+              title: 'Başarılı',
+              description: 'Kullanıcı bilgileri güncellendi',
+              status: 'success',
+              duration: 3000,
+              isClosable: true,
+            });
+            onClose();
+            fetchUsers();
+          } else {
+            toast({
+              title: 'Hata',
+              description: 'Güncelleme başarısız',
+              status: 'error',
+              duration: 3000,
+              isClosable: true,
+            });
+          }
         } catch (error) {
-            console.error('Update user error:', error);
+          console.error('Update error:', error);
+          toast({
+            title: 'Hata',
+            description: 'Sunucuya bağlanılamadı',
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      };
+
+    // Delete User fonksiyonu
+    const handleDeleteUser = async (user: User) => {
+        if (!user.id) {
             toast({
                 title: 'Hata',
-                description: 'Kullanıcı güncellenemedi',
+                description: 'Kullanıcı ID bulunamadı',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
             });
+            return;
         }
-    };
-
-    // Delete User fonksiyonu
-    const handleDeleteUser = async (user: User) => {
-        if (!user.id) { // uniqueId yerine id kullanın
-        toast({
-            title: 'Hata',
-            description: 'Kullanıcı ID bulunamadı',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-        });
-        return;
-    }
-
+    
         if (!window.confirm(`${user.name} adlı kullanıcıyı silmek istediğinizden emin misiniz?`)) return;
-
+    
         try {
-        const response = await makeApiCall<ApiResponse<void>>(API_ENDPOINTS.DELETE_USER, {
-            method: 'DELETE',
-            body: JSON.stringify({
-                id: user.id // UUID formatındaki ID'yi gönderin
-            })
-        });
-
-            if (response.isSuccess) {
-                toast({
-                    title: 'Başarılı',
-                    description: 'Kullanıcı silindi',
-                    status: 'success',
-                    duration: 3000,
-                    isClosable: true,
-                });
-                // Refresh user list
-                fetchUsers();
-            } else {
-                toast({
-                    title: 'Hata',
-                    description: 'Kullanıcı silinemedi',
-                    status: 'error',
-                    duration: 3000,
-                    isClosable: true,
-                });
+            const response = await fetch(`https://intfinex.azurewebsites.net/api/User/Delete/${user.id}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${getAuthToken()}`,  // Token'ı buraya yerleştir
+                    'Content-Type': 'application/json'
+                }
+            });
+    
+            if (!response.ok) {
+                throw new Error(`API hatası: ${response.status} ${response.statusText}`);
             }
+    
+            const responseData = await response.json();
+            console.log('Delete user response:', responseData);
+    
+            if (!responseData.isSuccess) {
+                throw new Error('Kullanıcı silinemedi');
+            }
+    
+            // Başarılı silme işlemi sonrası yapılacak işlemler (örneğin, kullanıcı listesi güncelleme)
+            toast({
+                title: 'Başarılı',
+                description: `${user.name} adlı kullanıcı başarıyla silindi.`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
         } catch (error) {
-            console.error('Delete user error:', error);
+            console.error('[Admin] Kullanıcı silme hatası:', error);
             toast({
                 title: 'Hata',
-                description: 'Kullanıcı silinemedi',
+                description: 'Kullanıcı silinemedi. Lütfen tekrar deneyin.',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
