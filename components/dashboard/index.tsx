@@ -32,7 +32,7 @@ function Dashboard() {
       try {
         if (typeof window === 'undefined') return;
 
-        const userDataRaw = localStorage.getItem("userData");
+        const userDataRaw = localStorage.getItem('userData');
         const userEmail = localStorage.getItem("userEmail");
         console.log("[Dashboard] LocalStorage'dan okunan veriler:", {
           userDataRaw,

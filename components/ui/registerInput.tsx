@@ -232,12 +232,88 @@ export default function RegisterInput(props: StackProps) {
           isClosable: true,
         });
 
-        setTimeout(() => {
-          // Redirect to the user's dashboard after successful verification
-          window.location.href = '/dashboard';
-        }, 1500);
+        try {
+          // Geçici kullanıcı bilgilerini al
+          const tempUserStr = localStorage.getItem('tempUser');
+          if (!tempUserStr) {
+            throw new Error('Kullanıcı bilgileri bulunamadı');
+          }
 
-        return true;
+          const tempUser = JSON.parse(tempUserStr);
+
+          // Login denemesi yap
+          const loginResponse = await fetch('https://intfinex.azurewebsites.net/api/Login/Login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: tempUser.email,
+              password: tempUser.password
+            })
+          });
+          
+          console.log("Giriş yapılacak bilgiler:", {
+            email: tempUser.email,
+            password: tempUser.password
+          });
+          
+          console.log('Status:', loginResponse.status);
+          console.log('StatusText:', loginResponse.statusText);
+          
+          if (!loginResponse.ok) {
+            throw new Error(`API hatası: ${loginResponse.status} ${loginResponse.statusText}`);
+          }
+          
+          const loginData = await loginResponse.json();
+          console.log('Parsed login data:', loginData);
+
+          // API yanıtını kontrol et
+          console.log('Login response status:', loginResponse.status);
+          console.log('Login response headers:', Object.fromEntries(loginResponse.headers.entries()));
+
+          if (!loginResponse.ok) {
+            throw new Error(`API hatası: ${loginResponse.status} ${loginResponse.statusText}`);
+          }
+
+          if (!loginData.isSuccess) {
+            throw new Error(loginData.errors?.[0] || 'Login başarısız oldu');
+          }
+
+          // Login başarılı, kullanıcı bilgilerini kaydet
+          localStorage.clear(); // Geçici verileri temizle
+
+          const userData = {
+            ...tempUser,
+            token: loginData.data 
+          };
+          delete userData.password; // Şifre silinsin
+          
+          localStorage.setItem('userData', JSON.stringify(loginData));
+          localStorage.setItem('userEmail', tempUser.email);
+          console.log("[DEBUG] localStorage tüm içerik:", { ...localStorage });
+
+          // Dashboard'a yönlendir
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 1500);
+
+          return true;
+        } catch (error: unknown) {
+          console.error('Login error:', error);
+          let errorMessage = 'Giriş yapılırken bir hata oluştu';
+          
+          if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          
+          toast({
+            title: 'Hata',
+            description: errorMessage,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+          return false;
+        }
       } else {
         const errorMessage = verifyData.errors?.[0] || 'Doğrulama başarısız oldu. Lütfen tekrar deneyin.';
         console.log('Validation failed:', {
@@ -394,7 +470,51 @@ export default function RegisterInput(props: StackProps) {
         isClosable: true,
       });
 
-      // Form verilerini güncelle
+      // Geçici kullanıcı bilgilerini localStorage'a kaydet
+      const tempUserData = {
+        id: userId,
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,  // Login için gerekecek
+        phoneNumber: formData.phoneNumber || '',
+        uniqueId: uniqueId
+      };
+      localStorage.setItem('tempUser', JSON.stringify(tempUserData));
+
+      // Login denemesi yap
+      // try {
+      //   const loginResponse = await fetch('https://intfinex.azurewebsites.net/api/User/Login', {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({
+      //       email: formData.email,
+      //       password: formData.password
+      //     })
+      //   });
+
+      //   const loginData = await loginResponse.json();
+
+      //   if (loginResponse.ok && loginData.isSuccess) {
+      //     // Login başarılı, kullanıcı bilgilerini kaydet
+      //     const userData = {
+      //       id: userId,
+      //       name: formData.name,
+      //       email: formData.email,
+      //       phoneNumber: formData.phoneNumber || '',
+      //       uniqueId: uniqueId,
+      //       token: loginData.data?.token
+      //     };
+      //     localStorage.setItem('user', JSON.stringify(userData));
+
+      //     // Dashboard'a yönlendir
+      //     window.location.href = '/dashboard';
+      //     return true;
+      //   }
+      // } catch (error) {
+      //   console.error('Login error:', error);
+      // }
+
+      // Login başarısız olsa bile form verilerini güncelle ve devam et
       setFormData(prev => ({
         ...prev,
         userId: userId
