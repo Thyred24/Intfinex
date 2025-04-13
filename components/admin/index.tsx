@@ -370,7 +370,7 @@ function Admin() {
                             size="lg"
                             colorScheme="teal"
                             variant="outline"
-                            _hover={{ bg: '#36b0e2' }}
+                            cursor="disabled"
                         >
                             Turn Off All
                         </Button>
