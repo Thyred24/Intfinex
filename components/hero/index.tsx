@@ -11,6 +11,12 @@ import CustomCheckbox from '@/components/ui/chekbox'
 import SocialMedia from '@/components/ui/social-media'
 import RegisterInput from '@/components/ui/registerInput'
 
+interface User {
+  email: string;
+  userLevel?: string;
+  isEmailApproved: boolean;
+}
+
 function Hero() {
   const [formData, setFormData] = useState({
     email: '',
@@ -20,7 +26,7 @@ function Hero() {
   const [errorMessage, setErrorMessage] = useState('');
   const toast = useToast();
   const [isSuccess, setIsSuccess] = useState(false);
-
+  
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
       toast({
@@ -32,51 +38,106 @@ function Hero() {
       });
       return;
     }
-  
+
+    console.log("[LOGIN] Login başladı...");
     setIsLoading(true);
     setErrorMessage('');
-    
-    try {
-      const response = await fetch("https://intfinex.azurewebsites.net/api/Login/Login", {
-        method: "POST",
-        body: JSON.stringify(formData),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-  
-      const result = await response.json();
-      console.log("Gelen veri:", result);
 
-      if (result.isSuccess) {
+    try {
+      const response = await fetch('https://intfinex.azurewebsites.net/api/Login/Login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+    
+      console.log("[LOGIN] Response status:", response.status);
+    
+      const loginResult = await response.json();
+      console.log("[LOGIN] Login result:", loginResult);
+    
+      if (loginResult.isSuccess && loginResult.data && loginResult.data[0]) {
+        const token = loginResult.data[0];
+        localStorage.setItem('userData', JSON.stringify(loginResult));
+        localStorage.setItem('userEmail', formData.email);
+    
+        console.log("[LOGIN] Token kaydedildi, email kaydedildi:", { token, email: formData.email });
+    
+        // Şimdi GetList'e istek atıp email onayı kontrol edelim
+        const userListResponse = await fetch('https://intfinex.azurewebsites.net/api/User/GetList', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+    
+        const userListData = await userListResponse.json();
+        console.log("[LOGIN] Kullanıcı listesi:", userListData);
+    
+        if (userListData.isSuccess && userListData.data) {
+          const currentUser = userListData.data.find((u: User) => u.email === formData.email);
+    
+          if (currentUser) {
+            console.log("[LOGIN] Kullanıcı bulundu:", currentUser);
+    
+            if (currentUser.isEmailApproved) {
+              console.log("[LOGIN] Email doğrulanmış, dashboard'a yönlendiriliyor...");
+              setIsSuccess(true);
+              toast({
+                title: 'Başarılı',
+                description: 'Giriş başarılı, yönlendiriliyorsunuz...',
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+              });
+
+              // Kısa bir gecikme ile yönlendirme yapalım
+              setTimeout(() => {
+                if (currentUser.userLevel === 'Admin') {
+                  window.location.href = '/admin';
+                } else if (currentUser.userLevel === 'Premium') {
+                  window.location.href = '/dashboard?premium=true';
+                } else {
+                  window.location.href = '/dashboard';
+                }
+              }, 1000);
+            } else {
+              console.log("[LOGIN] Email doğrulanmamış, email doğrulama ekranına yönlendiriliyor...");
+              setErrorMessage('Please perform email integration');
+              toast({
+                title: 'Email Doğrulanmamış',
+                description: 'Lütfen email adresinizi doğrulayın.',
+                status: 'warning',
+                duration: 5000,
+                isClosable: true,
+              });
+              localStorage.setItem('needsEmailVerification', 'true');
+            }
+          } else {
+            console.log("[LOGIN] Kullanıcı GetList içinde bulunamadı.");
+            toast({
+              title: 'Kullanıcı bulunamadı',
+              description: 'Lütfen tekrar giriş yapın.',
+              status: 'error',
+              duration: 3000,
+              isClosable: true,
+            });
+          }
+        } else {
+          console.log("[LOGIN] Kullanıcı listesi alınamadı:", userListData.errors);
+          setErrorMessage('Kullanıcı bilgileri alınamadı');
+        }
+      } else {
+        setErrorMessage(loginResult.message || 'User email/password is not correct!');
         toast({
-          title: 'Başarılı',
-          description: 'Login successful, you are being redirected...',
-          status: 'success',
+          title: 'Giriş Başarısız',
+          description: 'Email veya şifre yanlış.',
+          status: 'error',
           duration: 3000,
           isClosable: true,
         });
-        setIsSuccess(true);
-        localStorage.setItem('userData', JSON.stringify(result));
-        localStorage.setItem('userEmail', formData.email);
-      
-        // Kısa bir gecikme ile yönlendirme yapalım ki kullanıcı başarılı mesajını görebilsin
-        setTimeout(() => {
-          // Check userLevel for redirection
-          if (result.userLevel === 'Admin') {
-            window.location.href = '/admin';
-          } else if (result.userLevel === 'Premium') {
-            window.location.href = '/dashboard?premium=true';
-          } else {
-            // Basic users
-            window.location.href = '/dashboard';
-          }
-        }, 1000);
-      } else {
-        setErrorMessage(result.message || 'User email/password is not correct!');
-        setIsSuccess(false);
       }
     } catch (error) {
+      console.error("[LOGIN] Hata:", error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Login failed',
@@ -84,11 +145,10 @@ function Hero() {
         duration: 5000,
         isClosable: true,
       });
-    } finally { 
+    } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <Flex position="relative" width="100%">

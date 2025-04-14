@@ -12,7 +12,7 @@ import { Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/alert
 import { useToast } from '@chakra-ui/toast';
 import { useSteps } from '@chakra-ui/stepper';
 import { LuLock } from 'react-icons/lu';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
 import CustomButton from '@/components/ui/button';
 import { environment } from '@/app/config/environment';
@@ -38,16 +38,9 @@ interface RegisterApiResponse {
 }
 
 export default function RegisterInput(props: StackProps) {
-
   const toast = useToast();
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [verifyError, setVerifyError] = useState('');
   const { activeStep, goToNext, goToPrevious } = useSteps({ index: 0 });
-  const [loading, setLoading] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [verificationMessage, setVerificationMessage] = useState('');
-
-
+  
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -56,6 +49,29 @@ export default function RegisterInput(props: StackProps) {
     verificationCode: '',
     userId: ''
   });
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [verificationMessage, setVerificationMessage] = useState('');
+
+  // Email doğrulama kontrolü
+  useEffect(() => {
+    const needsEmailVerification = localStorage.getItem('needsEmailVerification');
+    const userData = localStorage.getItem('userData');
+
+    if (needsEmailVerification === 'true' && userData) {
+      const parsedUserData = JSON.parse(userData);
+      setFormData(prevData => ({
+        ...prevData,
+        email: localStorage.getItem('userEmail') || '',
+        userId: parsedUserData.userId || ''
+      }));
+      goToNext(); // Doğrudan email doğrulama adımına git
+      localStorage.removeItem('needsEmailVerification'); // Flag'i temizle
+    }
+  }, [goToNext, setFormData]);
+
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
