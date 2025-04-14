@@ -10,6 +10,11 @@ import {
   Button
 } from '@chakra-ui/react'
 import {
+  Alert,
+  AlertIcon,
+  AlertDescription
+} from '@chakra-ui/alert'
+import {
   Menu,
   MenuButton,
   MenuList,
@@ -32,7 +37,6 @@ import {
 import { useToast } from '@chakra-ui/toast'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
-import Btn from '@/components/ui/button';
 
 interface DashboardTopProps {
   onViewChange: (view: string) => void;
@@ -44,6 +48,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
   interface UserData {
+    id: number;
     name: string;
     surname: string;
     email: string;
@@ -58,11 +63,12 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [updateData, setUpdateData] = useState({
-    email: '',
-    phoneNumber: '',
-    password: ''
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -292,11 +298,6 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
                 <MenuList bg="#000A1C" border="1px solid #36b0e2">
                   <MenuItem
                     onClick={() => {
-                      setUpdateData({
-                        email: userData?.email || '',
-                        phoneNumber: userData?.phoneNumber || '',
-                        password: ''
-                      });
                       onOpen();
                     }}
                     _hover={{ bg: 'rgba(54, 176, 226, 0.2)' }}
@@ -329,58 +330,35 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
         <ModalOverlay
           bg="blackAlpha.300"
           backdropFilter="blur(10px)"
-          display="none"
         />
         <ModalContent
           bg="rgba(0, 0, 0, 0.85)"
           border="1px solid"
           borderColor="#36b0e2"
-          borderRadius="15px"
-          p={4}
+          borderRadius="10px"
+          p={10}
           width={{ base: '90%', sm: '80%', md: '60%', lg: '50%' }}
-          display="none"
+          alignItems="center"
+          mt={200}
         >
-          <ModalHeader color="white" fontSize={{ base: '18px', md: '20px' }}>Update Profile</ModalHeader>
+          <ModalHeader color="white" fontSize={{ base: '18px', md: '20px' }}>Change Password</ModalHeader>
           <ModalCloseButton color="white" />
           <ModalBody pb={{ base: 4, md: 6 }}>
-            <Stack>
-              <FormControl>
-                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Email</FormLabel>
-                <Input
-                  value={updateData.email}
-                  onChange={(e) => setUpdateData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="New Email"
-                  size={{ base: 'sm', md: 'md' }}
-                  bg="transparent"
-                  color="white"
-                  borderColor="#36b0e2"
-                  _hover={{ borderColor: '#36b0e2' }}
-                  _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
-                />
-              </FormControl>
+            <Stack gap={4}>
+              {passwordError && (
+                <Alert status="error" bg="rgba(254, 178, 178, 0.1)" borderRadius="md">
+                  <AlertIcon />
+                  <AlertDescription color="red.300">{passwordError}</AlertDescription>
+                </Alert>
+              )}
 
               <FormControl>
-                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Phone Number</FormLabel>
-                <Input
-                  value={updateData.phoneNumber}
-                  onChange={(e) => setUpdateData(prev => ({ ...prev, phoneNumber: e.target.value }))}
-                  placeholder="New Phone Number"
-                  size={{ base: 'sm', md: 'md' }}
-                  bg="transparent"
-                  color="white"
-                  borderColor="#36b0e2"
-                  _hover={{ borderColor: '#36b0e2' }}
-                  _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Password</FormLabel>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Current Password</FormLabel>
                 <Input
                   type="password"
-                  value={updateData.password}
-                  onChange={(e) => setUpdateData(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="New Password"
+                  value={passwordData.oldPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, oldPassword: e.target.value }))}
+                  placeholder="Enter current password"
                   size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
@@ -390,69 +368,167 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
                 />
               </FormControl>
 
-              <Btn 
-                buttonText="Update Profile" 
-                onClick={async () => {
-                  try {
-                    setIsUpdating(true);
-                    const authData = localStorage.getItem('userData');
-                    if (!authData) {
-                      router.push('/');
-                      return;
-                    }
+              <FormControl>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>New Password</FormLabel>
+                <Input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Enter new password"
+                  size={{ base: 'sm', md: 'md' }}
+                  bg="transparent"
+                  color="white"
+                  borderColor="#36b0e2"
+                  _hover={{ borderColor: '#36b0e2' }}
+                  _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
+                />
+              </FormControl>
 
-                    const parsedAuthData = JSON.parse(authData);
-                    const response = await fetch('https://intfinex.azurewebsites.net/api/User/Update', {
-                      method: 'PUT',
-                      headers: {
-                        'Authorization': `Bearer ${parsedAuthData.data[0]}`,
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({
-                        email: updateData.email,
-                        phoneNumber: updateData.phoneNumber,
-                        password: updateData.password || undefined
-                      })
-                    });
+              <FormControl>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Confirm New Password</FormLabel>
+                <Input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Confirm new password"
+                  size={{ base: 'sm', md: 'md' }}
+                  bg="transparent"
+                  color="white"
+                  borderColor="#36b0e2"
+                  _hover={{ borderColor: '#36b0e2' }}
+                  _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
+                />
+              </FormControl>
 
-                    const result = await response.json();
+              <Button
+  width="100%"
+  bg="#36b0e2"
+  color="white"
+  _hover={{ bg: '#2c8eb3' }}
+  size={{ base: 'sm', md: 'md' }}
+  onClick={async () => {
+    try {
+      console.log("Başlangıç: Şifre güncelleme işlemi başlıyor");
+      setIsUpdating(true);
+      setPasswordError('');
 
-                    if (result.isSuccess) {
-                      toast({
-                        title: 'Profile Updated',
-                        description: 'Your profile has been successfully updated.',
-                        status: 'success',
-                        duration: 5000,
-                        isClosable: true,
-                      });
-                      // Update local user data
-                      if (userData) {
-                        setUserData({
-                          ...userData,
-                          email: updateData.email,
-                          phoneNumber: updateData.phoneNumber
-                        });
-                      }
-                      onClose();
-                    } else {
-                      throw new Error(result.errors?.[0] || 'Update failed');
-                    }
-                  } catch (error) {
-                    toast({
-                      title: 'Error',
-                      description: error instanceof Error ? error.message : 'Failed to update profile',
-                      status: 'error',
-                      duration: 5000,
-                      isClosable: true,
-                    });
-                  } finally {
-                    setIsUpdating(false);
-                  }
-                }}
-                loading={isUpdating}
-                mb={4}
-              />
-            </Stack>
+      // Validation
+      console.log("Validation yapılıyor...");
+      if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+        console.warn("Eksik alanlar var:", passwordData);
+        setPasswordError('Please fill in all fields');
+        return;
+      }
+
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        console.warn("Yeni şifreler uyuşmuyor");
+        setPasswordError('New passwords do not match');
+        return;
+      }
+
+      if (passwordData.newPassword.length < 6) {
+        console.warn("Yeni şifre çok kısa");
+        setPasswordError('New password must be at least 6 characters long');
+        return;
+      }
+
+      console.log("Validation geçti");
+
+      const authData = localStorage.getItem('userData');
+      if (!authData) {
+        console.error("LocalStorage'da userData bulunamadı");
+        router.push('/');
+        return;
+      }
+
+      const parsedAuthData = JSON.parse(authData);
+      console.log("LocalStorage'dan alınan authData:", parsedAuthData);
+
+      if (!userData?.id) {
+        console.error("userData.id bulunamadı");
+        setPasswordError('User ID not found');
+        return;
+      }
+
+      const endpoint = `https://intfinex.azurewebsites.net/api/User/Update/${userData.id}`;
+      const bodyData = {
+        oldPassword: passwordData.oldPassword,
+        newPassword: passwordData.newPassword
+      };
+
+      console.log("API endpoint:", endpoint);
+      console.log("Gönderilen veri:", bodyData);
+
+      const response = await fetch(endpoint, {
+        method: 'PUT', // 'POST' yerine 'PUT' kullanıyoruz
+        headers: {
+          'Authorization': `Bearer ${parsedAuthData.data[0]}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: userData.id, // id burada gönderilmeli
+          password: passwordData.newPassword, // yalnızca şifreyi değiştiriyoruz
+          email: "", // diğer zorunlu alanları boş bırakıyoruz
+          name: "", 
+          surname: "",
+          uniqueId: 0, // veya varsayılan değerler
+          phoneNumber: "",
+          userLevelId: 0,
+          accountAgent: "",
+          document: "",
+          service: ""
+        })
+      });
+
+      console.log("API'den yanıt alındı. Status:", response.status);
+
+      const contentType = response.headers.get("content-type");
+      console.log("Response content-type:", contentType);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Hatası (response.ok değil):", errorText);
+        setPasswordError('Password change failed');
+        return;
+      }
+
+      if (contentType && contentType.includes("application/json")) {
+        const result = await response.json();
+        console.log("API JSON yanıtı:", result);
+
+        if (result.isSuccess) {
+          toast({
+            title: 'Success',
+            description: 'Password changed successfully',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+          onClose();
+          setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        } else {
+          console.warn("İşlem başarısız:", result);
+          setPasswordError(result.message || result.errors?.[0] || 'Failed to change password');
+        }
+      } else {
+        const text = await response.text();
+        console.error("Beklenmeyen formatta yanıt alındı:", text);
+        setPasswordError("Sunucu beklenmeyen bir cevap verdi");
+      }
+    } catch (error) {
+      console.error('Şifre değiştirme sırasında hata oluştu:', error);
+      setPasswordError('An error occurred. Please try again.');
+      } finally {
+      console.log("İşlem tamamlandı. Yüklenme durumu sıfırlanıyor");
+      setIsUpdating(false);
+    }
+  }
+}
+loading={isUpdating}
+            >
+              Change Password
+            </Button>
+          </Stack>
           </ModalBody>
         </ModalContent>
       </Modal>

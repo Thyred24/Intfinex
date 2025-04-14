@@ -3,7 +3,6 @@
 import { Box, Button, Flex, Text, Grid, GridItem, Input } from '@chakra-ui/react'
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@chakra-ui/modal'
 import { FormControl, FormLabel } from '@chakra-ui/form-control'
-import { Switch } from '@chakra-ui/switch'
 import { useToast } from '@chakra-ui/toast'
 import { useDisclosure } from '@chakra-ui/hooks'
 import { useRouter } from 'next/navigation'
@@ -283,50 +282,52 @@ function Admin() {
     const handleDeleteUser = async (user: User) => {
         if (!user.id) {
             toast({
-                title: 'Hata',
-                description: 'Kullanıcı ID bulunamadı',
+                title: 'Error',
+                description: 'User ID not found',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
             });
             return;
         }
-    
-        if (!window.confirm(`${user.name} adlı kullanıcıyı silmek istediğinizden emin misiniz?`)) return;
-    
+
+        if (!window.confirm(`Are you sure you want to delete user ${user.name}?`)) return;
+
         try {
             const response = await fetch(`https://intfinex.azurewebsites.net/api/User/Delete/${user.id}`, {
                 method: 'DELETE',
                 headers: {
-                    Authorization: `Bearer ${getAuthToken()}`,  // Token'ı buraya yerleştir
+                    Authorization: `Bearer ${getAuthToken()}`,
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             if (!response.ok) {
-                throw new Error(`API hatası: ${response.status} ${response.statusText}`);
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
-    
+
             const responseData = await response.json();
             console.log('Delete user response:', responseData);
-    
+
             if (!responseData.isSuccess) {
-                throw new Error('Kullanıcı silinemedi');
+                throw new Error('Failed to delete user');
             }
-    
-            // Başarılı silme işlemi sonrası yapılacak işlemler (örneğin, kullanıcı listesi güncelleme)
+
             toast({
-                title: 'Başarılı',
-                description: `${user.name} adlı kullanıcı başarıyla silindi.`,
+                title: 'Success',
+                description: `${user.name} has been successfully deleted.`,
                 status: 'success',
                 duration: 3000,
                 isClosable: true,
             });
+
+            // Refresh user list automatically
+            await fetchUsers();
         } catch (error) {
-            console.error('[Admin] Kullanıcı silme hatası:', error);
+            console.error('[Admin] User deletion error:', error);
             toast({
-                title: 'Hata',
-                description: 'Kullanıcı silinemedi. Lütfen tekrar deneyin.',
+                title: 'Error',
+                description: 'Failed to delete user. Please try again.',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
@@ -440,7 +441,7 @@ function Admin() {
             <Box bg="rgba(0, 0, 0, 0.3)" p={6} borderRadius="xl" mb={6}>
                 <Box mb={4}>
                     <Grid
-                        templateColumns="repeat(6, 1fr)"
+                        templateColumns="repeat(11, 1fr)"
                         gap={4}
                         p={4}
                         borderBottom="2px solid rgba(54, 176, 226, 0.5)"
@@ -450,6 +451,11 @@ function Admin() {
                         <GridItem>ID</GridItem>
                         <GridItem>Name</GridItem>
                         <GridItem>Email</GridItem>
+                        <GridItem>Security</GridItem>
+                        <GridItem>Account Agent</GridItem>
+                        <GridItem>Statu</GridItem>
+                        <GridItem>Document</GridItem>
+                        <GridItem>Service</GridItem>
                         <GridItem>Verification</GridItem>
                         <GridItem>Edit</GridItem>
                         <GridItem>Delete</GridItem>
@@ -468,7 +474,7 @@ function Admin() {
                             transition="all 0.3s"
                         >
                             <Grid
-                                templateColumns="repeat(6, 1fr)"
+                                templateColumns="repeat(11, 1fr)"
                                 gap={4}
                                 alignItems="center"
                             >
@@ -481,8 +487,23 @@ function Admin() {
                                 <GridItem color="white">
                                     <Text>{user.email}</Text>
                                 </GridItem>
-                                <GridItem>
-                                    <Text p={2} w= "50%" textAlign="center" borderRadius="lg" fontSize="xs" bg={user.isEmailApproved ? 'green' : 'red'}>
+                                <GridItem color="white">
+                                    <Text>{user.security || "Password"}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text>{user.accountAgent || "Global Team"}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text>{user.userLevel || "Basic"}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text>{user.document || "N/A"}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text>{user.services || "N/A"}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text p={2} w= "100%" textAlign="center" borderRadius="lg" fontSize="xs" bg={user.isEmailApproved ? 'green' : 'red'}>
                                         Email Verification
                                     </Text>
                                 </GridItem>
@@ -529,7 +550,15 @@ function Admin() {
                     <ModalBody>
                         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
                             <FormControl>
-                                <FormLabel>Ad</FormLabel>
+                                <FormLabel>ID</FormLabel>
+                                <Input
+                                    value={selectedUser?.uniqueId || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, uniqueId: e.target.value } : null)}
+                                    readOnly
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel>Name</FormLabel>
                                 <Input
                                     value={selectedUser?.name || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, name: e.target.value } : null)}
@@ -537,15 +566,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Email</FormLabel>
-                                <Input
-                                    value={selectedUser?.email || ''}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, email: e.target.value } : null)}
-                                />
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>Telefon</FormLabel>
+                                <FormLabel>Phone Number</FormLabel>
                                 <Input
                                     value={selectedUser?.phoneNumber || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, phoneNumber: e.target.value } : null)}
@@ -553,7 +574,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Kullanıcı Seviyesi</FormLabel>
+                                <FormLabel>User Level</FormLabel>
                                 <Input
                                     value={selectedUser?.userLevel || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, userLevel: e.target.value } : null)}
@@ -561,7 +582,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Hesap Yöneticisi</FormLabel>
+                                <FormLabel>Account Agent</FormLabel>
                                 <Input
                                     value={selectedUser?.accountAgent || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, accountAgent: e.target.value } : null)}
@@ -569,7 +590,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Durum</FormLabel>
+                                <FormLabel>Status</FormLabel>
                                 <Input
                                     value={selectedUser?.status || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, status: e.target.value } : null)}
@@ -577,7 +598,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Doküman</FormLabel>
+                                <FormLabel>Document</FormLabel>
                                 <Input
                                     value={selectedUser?.document || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, document: e.target.value } : null)}
@@ -585,7 +606,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Servisler</FormLabel>
+                                <FormLabel>Services</FormLabel>
                                 <Input
                                     value={selectedUser?.services || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, services: e.target.value } : null)}
@@ -593,7 +614,7 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Güvenlik</FormLabel>
+                                <FormLabel>Security</FormLabel>
                                 <Input
                                     value={selectedUser?.security || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, security: e.target.value } : null)}
@@ -601,36 +622,20 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Dokümanlar</FormLabel>
+                                <FormLabel>Documents</FormLabel>
                                 <Input
                                     value={selectedUser?.documents || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, documents: e.target.value } : null)}
-                                />
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>Email Doğrulama</FormLabel>
-                                <Switch
-                                    isChecked={selectedUser?.emailVerification || false}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, emailVerification: e.target.checked } : null)}
-                                />
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>SMS Doğrulama</FormLabel>
-                                <Switch
-                                    isChecked={selectedUser?.smsVerification || false}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, smsVerification: e.target.checked } : null)}
                                 />
                             </FormControl>
                         </Grid>
                     </ModalBody>
                     <ModalFooter>
                         <Button colorScheme="blue" mr={3} onClick={handleUpdateUser}>
-                            Kaydet
+                            Save
                         </Button>
                         <Button variant="ghost" onClick={onClose}>
-                            İptal
+                            Cancel
                         </Button>
                     </ModalFooter>
                 </ModalContent>
