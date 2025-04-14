@@ -125,8 +125,13 @@ function Dashboard() {
         if (currentUser) {
           setUser(currentUser);
 
+          // Kullanıcı listesini localStorage'a kaydet
+          console.log('[Dashboard] Kullanıcı listesi localStorage\'a kaydediliyor');
+          localStorage.setItem('userList', JSON.stringify(result.data));
+
           // Check if user is admin and redirect
           if (currentUser.userLevel === 'Admin') {
+            console.log('[Dashboard] Admin kullanıcısı tespit edildi, yönlendirme yapılıyor');
             router.push('/admin');
             return;
           }

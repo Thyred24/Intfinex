@@ -136,10 +136,14 @@ function Admin() {
     // Kullanıcı listesini çekme
     const fetchUsers = useCallback(async () => {
         try {
-            const result = await makeApiCall<ApiUser[]>(API_ENDPOINTS.GET_USERS);
+            console.log('[Admin] localStorage kontrolü yapılıyor...');
+            // Önce localStorage'dan kullanıcı listesini kontrol et
+            const cachedUserList = localStorage.getItem('userList');
             
-            if (result.data) {
-                const processedUsers = result.data.map((user: ApiUser) => ({
+            if (cachedUserList) {
+                console.log('[Admin] Cache bulundu, localStorage verisi kullanılıyor');
+                const userList = JSON.parse(cachedUserList);
+                const processedUsers = userList.map((user: ApiUser) => ({
                     ...user,
                     emailVerification: typeof user.emailVerification === 'string' 
                         ? user.emailVerification === 'true' 
@@ -155,11 +159,37 @@ function Admin() {
                 if (adminUser) {
                     setAdminName(adminUser.name);
                 }
+                return;
             }
-        } catch {
+
+            console.log('[Admin] Cache bulunamadı, API çağrısı yapılıyor');
+            // Cache yoksa API'den çek
+            const result = await makeApiCall<ApiUser[]>(API_ENDPOINTS.GET_USERS);
+            
+            if (result.data) {
+                const processedUsers = result.data.map((user: ApiUser) => ({
+                    ...user,
+                    emailVerification: typeof user.emailVerification === 'string' 
+                        ? user.emailVerification === 'true' 
+                        : !!user.emailVerification,
+                    smsVerification: typeof user.smsVerification === 'string' 
+                        ? user.smsVerification === 'true' 
+                        : !!user.smsVerification
+                }));
+
+                setUsers(processedUsers);
+                localStorage.setItem('userList', JSON.stringify(result.data));
+
+                const adminUser = processedUsers.find((user: User) => user.userLevel === 'admin');
+                if (adminUser) {
+                    setAdminName(adminUser.name);
+                }
+            }
+        } catch (error) {
+            console.error('Kullanıcı listesi yükleme hatası:', error);
             toast({
-                title: 'Hata',
-                description: 'Kullanıcı listesi yüklenirken bir hata oluştu',
+                title: 'Error',
+                description: 'Failed to load user list',
                 status: 'error',
                 duration: 3000,
                 isClosable: true,
