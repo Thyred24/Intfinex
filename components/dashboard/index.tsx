@@ -14,7 +14,7 @@ interface User {
   accountAgent?: string;
   status?: string;
   document?: string;
-  services?: string;
+  service?: string;
   createdDate?: string;
   security?: string;
   documents?: string;
@@ -184,7 +184,7 @@ function Dashboard() {
     { name: "Agent", data: user.accountAgent || "Global Team" },
     { name: "Statu", data: user.userLevel || "Basic" },
     { name: "Document", data: user.document || "N/A" },
-    { name: "Service", data: user.services || "N/A" },
+    { name: "Service", data: user.service || "N/A" },
     { name: "Registration", data: user.createdDate || "Unknown" },
   ];
 

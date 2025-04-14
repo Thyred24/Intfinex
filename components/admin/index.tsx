@@ -31,7 +31,7 @@ interface User {
   accountAgent?: string;
   status?: string;
   document?: string;
-  services?: string;
+  service?: string;
   security?: string;
   documents?: string;
 }
@@ -219,7 +219,9 @@ function Admin() {
           userLevel: selectedUser.userLevel,
           accountAgent: selectedUser.accountAgent,
           document: selectedUser.document,
-          services: selectedUser.services
+          service: selectedUser.service,
+          security: selectedUser.security,
+          documents: selectedUser.documents
         };
 
         const token = getAuthToken();
@@ -451,11 +453,11 @@ function Admin() {
                         <GridItem>ID</GridItem>
                         <GridItem>Name</GridItem>
                         <GridItem>Email</GridItem>
-                        <GridItem>Security</GridItem>
                         <GridItem>Account Agent</GridItem>
                         <GridItem>Statu</GridItem>
                         <GridItem>Document</GridItem>
                         <GridItem>Service</GridItem>
+                        <GridItem>Security</GridItem>
                         <GridItem>Verification</GridItem>
                         <GridItem>Edit</GridItem>
                         <GridItem>Delete</GridItem>
@@ -488,9 +490,6 @@ function Admin() {
                                     <Text>{user.email}</Text>
                                 </GridItem>
                                 <GridItem color="white">
-                                    <Text>{user.security || "Password"}</Text>
-                                </GridItem>
-                                <GridItem color="white">
                                     <Text>{user.accountAgent || "Global Team"}</Text>
                                 </GridItem>
                                 <GridItem color="white">
@@ -500,7 +499,10 @@ function Admin() {
                                     <Text>{user.document || "N/A"}</Text>
                                 </GridItem>
                                 <GridItem color="white">
-                                    <Text>{user.services || "N/A"}</Text>
+                                    <Text>{user.service || "N/A"}</Text>
+                                </GridItem>
+                                <GridItem color="white">
+                                    <Text>{user.security || "Password"}</Text>
                                 </GridItem>
                                 <GridItem color="white">
                                     <Text p={2} w= "100%" textAlign="center" borderRadius="lg" fontSize="xs" bg={user.isEmailApproved ? 'green' : 'red'}>
@@ -590,14 +592,6 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Status</FormLabel>
-                                <Input
-                                    value={selectedUser?.status || ''}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, status: e.target.value } : null)}
-                                />
-                            </FormControl>
-
-                            <FormControl>
                                 <FormLabel>Document</FormLabel>
                                 <Input
                                     value={selectedUser?.document || ''}
@@ -606,10 +600,10 @@ function Admin() {
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>Services</FormLabel>
+                                <FormLabel>Service</FormLabel>
                                 <Input
-                                    value={selectedUser?.services || ''}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, services: e.target.value } : null)}
+                                    value={selectedUser?.service || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, service: e.target.value } : null)}
                                 />
                             </FormControl>
 
