@@ -171,15 +171,24 @@ function Admin() {
 
     useEffect(() => {
         const initializeAdmin = async () => {
+          /*  const token = localStorage.getItem('token');
+            const userLevel = localStorage.getItem('userLevel'); // Eğer rol bilgisi tutuluyorsa
+    
+            // Kullanıcı giriş yapmamışsa veya admin değilse yönlendir
+            if (!token || userLevel !== 'admin') {
+                router.replace('/'); // veya ana sayfa: '/'
+                return;
+            } */
+    
             try {
                 await fetchUsers();
             } finally {
                 setLoading(false);
             }
         };
-
+    
         initializeAdmin();
-    }, [fetchUsers, setLoading]);
+    }, [fetchUsers, setLoading, router]);
 
     const handleLogout = () => {
         localStorage.clear();
