@@ -12,6 +12,7 @@ import SocialMedia from '@/components/ui/social-media'
 import RegisterInput from '@/components/ui/registerInput'
 
 interface User {
+  id: string;
   email: string;
   userLevel?: string;
   isEmailApproved: boolean;
@@ -20,12 +21,176 @@ interface User {
 function Hero() {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    verificationCode: ''
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const toast = useToast();
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
+
+  // Email doğrulama kodu doğrulama fonksiyonu
+  const validateEmailCode = async () => {
+    if (!currentUserId || !formData.verificationCode) {
+      toast({
+        title: 'Hata',
+        description: 'Doğrulama kodu gerekli',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      console.log('[VALIDATE_EMAIL] Doğrulama kodu kontrol ediliyor...', {
+        userId: currentUserId,
+        code: formData.verificationCode,
+        timestamp: new Date().toISOString()
+      });
+
+      const response = await fetch('https://intfinex.azurewebsites.net/api/Verification/ValidateEmailCode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUserId,
+          code: formData.verificationCode
+        })
+      });
+
+      console.log('[VALIDATE_EMAIL] Response status:', response.status);
+      const result = await response.json();
+      console.log('[VALIDATE_EMAIL] Result:', result);
+
+      if (response.ok && result.isSuccess && (!result.errors || result.errors.length === 0)) {
+        toast({
+          title: 'Başarılı',
+          description: 'Email doğrulandı',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+
+        // Kullanıcı bilgilerini localStorage'dan al
+        const userDataStr = localStorage.getItem('userData');
+        const userEmail = localStorage.getItem('userEmail');
+
+        if (!userDataStr || !userEmail) {
+          throw new Error('Kullanıcı bilgileri bulunamadı');
+        }
+
+        const userData = JSON.parse(userDataStr);
+        console.log('[VALIDATE_EMAIL] User data:', userData);
+
+        // Dashboard'a yönlendir
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      } else {
+        const errorMessage = result.errors?.[0] || 'Doğrulama başarısız oldu. Lütfen tekrar deneyin.';
+        console.log('[VALIDATE_EMAIL] Validation failed:', {
+          responseOk: response.ok,
+          isSuccess: result.isSuccess,
+          errors: result.errors,
+          errorMessage
+        });
+
+        toast({
+          title: 'Hata',
+          description: errorMessage,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('[VALIDATE_EMAIL] Hata:', error);
+      toast({
+        title: 'Hata',
+        description: error instanceof Error ? error.message : 'Doğrulama başarısız',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Email doğrulama kodu gönderme fonksiyonu
+  const sendEmail = async (userId: string) => {
+    try {
+      console.log('[SEND_EMAIL] Doğrulama kodu gönderiliyor, userId:', userId);
+      const response = await fetch('https://intfinex.azurewebsites.net/api/Verification/SendEmail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+
+      console.log('[SEND_EMAIL] Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[SEND_EMAIL] API Error:', errorText);
+        throw new Error(`API yanıtı başarısız: ${response.status}`);
+      }
+
+      const responseText = await response.text();
+      console.log('[SEND_EMAIL] Raw response:', responseText);
+
+      if (!responseText) {
+        console.log('[SEND_EMAIL] Empty response, assuming success');
+        toast({
+          title: 'Başarılı',
+          description: 'Doğrulama kodu gönderildi',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      try {
+        const result = JSON.parse(responseText);
+        console.log('[SEND_EMAIL] Parsed result:', result);
+
+        if (result.isSuccess) {
+          toast({
+            title: 'Başarılı',
+            description: 'Doğrulama kodu gönderildi',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          throw new Error(result.message || 'Email gönderilemedi');
+        }
+      } catch (parseError) {
+        console.error('[SEND_EMAIL] JSON parse error:', parseError);
+        // Boş yanıt veya geçersiz JSON durumunda başarılı kabul ediyoruz
+        if (response.ok) {
+          toast({
+            title: 'Başarılı',
+            description: 'Doğrulama kodu gönderildi',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          throw new Error('Geçersiz API yanıtı');
+        }
+      }
+    } catch (error) {
+      console.error('[SEND_EMAIL] Hata:', error);
+      toast({
+        title: 'Hata',
+        description: error instanceof Error ? error.message : 'Doğrulama kodu gönderilemedi',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
   
   const handleLogin = async () => {
     if (!formData.email || !formData.password) {
@@ -74,10 +239,16 @@ function Hero() {
         console.log("[LOGIN] Kullanıcı listesi:", userListData);
     
         if (userListData.isSuccess && userListData.data) {
+          console.log("[LOGIN] Kullanıcı aranıyor, email:", formData.email);
           const currentUser = userListData.data.find((u: User) => u.email === formData.email);
-    
+
           if (currentUser) {
-            console.log("[LOGIN] Kullanıcı bulundu:", currentUser);
+            console.log("[LOGIN] Kullanıcı bulundu:", {
+              id: currentUser.id,
+              email: currentUser.email,
+              userLevel: currentUser.userLevel,
+              isEmailApproved: currentUser.isEmailApproved
+            });
     
             if (currentUser.isEmailApproved) {
               console.log("[LOGIN] Email doğrulanmış, dashboard'a yönlendiriliyor...");
@@ -101,11 +272,26 @@ function Hero() {
                 }
               }, 1000);
             } else {
-              console.log("[LOGIN] Email doğrulanmamış, email doğrulama ekranına yönlendiriliyor...");
+              console.log("[LOGIN] Email doğrulanmamış, yeni doğrulama kodu gönderiliyor...");
               setErrorMessage('Please perform email integration');
+              // Yeni doğrulama kodu gönder
+              if (currentUser.id) {
+                setCurrentUserId(currentUser.id);
+                setShowVerification(true);
+                sendEmail(currentUser.id);
+              } else {
+                console.error('[LOGIN] User ID bulunamadı');
+                toast({
+                  title: 'Hata',
+                  description: 'Kullanıcı ID bulunamadı',
+                  status: 'error',
+                  duration: 3000,
+                  isClosable: true,
+                });
+              }
               toast({
                 title: 'Email Doğrulanmamış',
-                description: 'Lütfen email adresinizi doğrulayın.',
+                description: 'Yeni doğrulama kodu gönderildi. Lütfen email adresinizi kontrol edin.',
                 status: 'warning',
                 duration: 5000,
                 isClosable: true,
@@ -238,6 +424,35 @@ function Hero() {
                     onChange={(value) => setFormData({...formData, password: value})}
                   />
                 </Box>
+                {showVerification && (
+                  <Box mb={{ base: 2, md: 4 }}>
+                    <CustomInput 
+                      placeholder="Verification Code" 
+                      icon={FaEnvelope}
+                      onChange={(value) => setFormData({...formData, verificationCode: value})}
+                    />
+                    <CustomButton 
+                      onClick={validateEmailCode}
+                      buttonText="Verify Code"
+                      width="100%"
+                      mt={2}
+                    />
+                    {isSuccess && (
+                      <Box mb={{ base: 2, md: 4 }} textAlign="center">
+                        <Text color="green.500" fontSize="sm">
+                          Login successful, you are being redirected...
+                        </Text>
+                      </Box>
+                    )}
+                    {errorMessage && (
+                      <Box mb={{ base: 2, md: 4 }} textAlign="center">
+                        <Text color="red.500" fontSize="sm">
+                          Email validation code is not valid or expired!
+                        </Text>
+                      </Box>
+                    )}
+                  </Box>
+                )}
                 {isSuccess && (
                   <Box mb={{ base: 2, md: 4 }} textAlign="center">
                     <Text color="green.500" fontSize="sm">
