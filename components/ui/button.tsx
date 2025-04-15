@@ -27,7 +27,7 @@ const CustomButton = ({
       bg: "#36b0e2",
       color: "#000A1C",
       _hover: {
-        bg: "linear-gradient(to top, rgb(0, 32, 71) 1%, rgb(54, 176, 226) 10%, rgb(0, 32, 71) 100%)",
+        bg: "linear-gradient(to top, #002047 1%, rgb(54, 176, 226) 10%, #002047 100%)",
         transform: "translateX(5px)",
         color: "#ffffff"
       }

@@ -61,12 +61,16 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
     errors: string[];
   }
 
+  interface PasswordData {
+    email: string;
+    password: string;
+  }
+
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+  const [passwordData, setPasswordData] = useState<PasswordData>({
+    email: '',
+    password: ''
   });
   const [passwordError, setPasswordError] = useState('');
 
@@ -353,12 +357,12 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
               )}
 
               <FormControl>
-                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Current Password</FormLabel>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Email</FormLabel>
                 <Input
-                  type="password"
-                  value={passwordData.oldPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, oldPassword: e.target.value }))}
-                  placeholder="Enter current password"
+                  type="email"
+                  value={passwordData.email}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter your email"
                   size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
@@ -369,28 +373,12 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
               </FormControl>
 
               <FormControl>
-                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>New Password</FormLabel>
+                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Password</FormLabel>
                 <Input
                   type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  value={passwordData.password}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, password: e.target.value }))}
                   placeholder="Enter new password"
-                  size={{ base: 'sm', md: 'md' }}
-                  bg="transparent"
-                  color="white"
-                  borderColor="#36b0e2"
-                  _hover={{ borderColor: '#36b0e2' }}
-                  _focus={{ borderColor: '#36b0e2', boxShadow: '0 0 0 1px #36b0e2' }}
-                />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel color="white" fontSize={{ base: '14px', md: '16px' }}>Confirm New Password</FormLabel>
-                <Input
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  placeholder="Confirm new password"
                   size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
@@ -414,21 +402,15 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
 
       // Validation
       console.log("Validation yapılıyor...");
-      if (!passwordData.oldPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      if (!passwordData.email || !passwordData.password) {
         console.warn("Eksik alanlar var:", passwordData);
         setPasswordError('Please fill in all fields');
         return;
       }
 
-      if (passwordData.newPassword !== passwordData.confirmPassword) {
-        console.warn("Yeni şifreler uyuşmuyor");
-        setPasswordError('New passwords do not match');
-        return;
-      }
-
-      if (passwordData.newPassword.length < 6) {
-        console.warn("Yeni şifre çok kısa");
-        setPasswordError('New password must be at least 6 characters long');
+      if (passwordData.password.length < 6) {
+        console.warn("Şifre çok kısa");
+        setPasswordError('Password must be at least 6 characters long');
         return;
       }
 
@@ -444,40 +426,22 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
       const parsedAuthData = JSON.parse(authData);
       console.log("LocalStorage'dan alınan authData:", parsedAuthData);
 
-      if (!userData?.id) {
-        console.error("userData.id bulunamadı");
-        setPasswordError('User ID not found');
-        return;
-      }
-
-      const endpoint = `https://intfinex.azurewebsites.net/api/User/Update/${userData.id}`;
+      const endpoint = 'https://intfinex.azurewebsites.net/api/User/UpdateUserPassword';
       const bodyData = {
-        oldPassword: passwordData.oldPassword,
-        newPassword: passwordData.newPassword
+        email: passwordData.email,
+        password: passwordData.password
       };
 
       console.log("API endpoint:", endpoint);
       console.log("Gönderilen veri:", bodyData);
 
       const response = await fetch(endpoint, {
-        method: 'PUT', // 'POST' yerine 'PUT' kullanıyoruz
+        method: 'PUT',
         headers: {
           'Authorization': `Bearer ${parsedAuthData.data[0]}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          id: userData.id, // id burada gönderilmeli
-          password: passwordData.newPassword, // yalnızca şifreyi değiştiriyoruz
-          email: "", // diğer zorunlu alanları boş bırakıyoruz
-          name: "", 
-          surname: "",
-          uniqueId: 0, // veya varsayılan değerler
-          phoneNumber: "",
-          userLevelId: 0,
-          accountAgent: "",
-          document: "",
-          service: ""
-        })
+        body: JSON.stringify(bodyData)
       });
 
       console.log("API'den yanıt alındı. Status:", response.status);
@@ -505,7 +469,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
             isClosable: true,
           });
           onClose();
-          setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+          setPasswordData({ email: '', password: '' });
         } else {
           console.warn("İşlem başarısız:", result);
           setPasswordError(result.message || result.errors?.[0] || 'Failed to change password');
@@ -518,7 +482,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
     } catch (error) {
       console.error('Şifre değiştirme sırasında hata oluştu:', error);
       setPasswordError('An error occurred. Please try again.');
-      } finally {
+    } finally {
       console.log("İşlem tamamlandı. Yüklenme durumu sıfırlanıyor");
       setIsUpdating(false);
     }
