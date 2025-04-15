@@ -45,7 +45,7 @@ function Header() {
         <Flex gap={{ base: 3, md: 5 }} alignItems="center" mt={{ base: 0, md: 8 }}>
           <Link href="/">
             <Image 
-              src="/images/logo.png"
+              src="/images/intfinex-logo.jpg"
               alt="Logo"
               width={70}
               height={70}

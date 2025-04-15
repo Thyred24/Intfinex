@@ -1,6 +1,7 @@
 'use client'
 
 import { Box, Button, Flex, Text, Grid, GridItem, Input } from '@chakra-ui/react'
+import { Select } from '@chakra-ui/select'
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton } from '@chakra-ui/modal'
 import { FormControl, FormLabel } from '@chakra-ui/form-control'
 import { useToast } from '@chakra-ui/toast'
@@ -22,8 +23,10 @@ interface User {
   uniqueId: string;
   name: string;
   email: string;
+  password: string;
   phoneNumber?: string;
   userLevel?: string;
+  userLevelId?: string;
   registerDate?: string;
   emailVerification?: boolean;
   smsVerification?: boolean;
@@ -33,7 +36,6 @@ interface User {
   document?: string;
   service?: string;
   security?: string;
-  documents?: string;
 }
 
 interface ApiResponse<T> {
@@ -89,6 +91,8 @@ function Admin() {
     const [loading, setLoading] = useState<boolean>(true);
     const [emailValidation, setEmailValidation] = useState<boolean>(environment.emailValidation);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [itemsPerPage] = useState<number>(10);
     const { isOpen, onOpen, onClose } = useDisclosure();
     const router = useRouter();
     const toast = useToast();
@@ -136,33 +140,7 @@ function Admin() {
     // Kullanıcı listesini çekme
     const fetchUsers = useCallback(async () => {
         try {
-            console.log('[Admin] localStorage kontrolü yapılıyor...');
-            // Önce localStorage'dan kullanıcı listesini kontrol et
-            const cachedUserList = localStorage.getItem('userList');
-            
-            if (cachedUserList) {
-                console.log('[Admin] Cache bulundu, localStorage verisi kullanılıyor');
-                const userList = JSON.parse(cachedUserList);
-                const processedUsers = userList.map((user: ApiUser) => ({
-                    ...user,
-                    emailVerification: typeof user.emailVerification === 'string' 
-                        ? user.emailVerification === 'true' 
-                        : !!user.emailVerification,
-                    smsVerification: typeof user.smsVerification === 'string' 
-                        ? user.smsVerification === 'true' 
-                        : !!user.smsVerification
-                }));
-
-                setUsers(processedUsers);
-
-                const adminUser = processedUsers.find((user: User) => user.userLevel === 'admin');
-                if (adminUser) {
-                    setAdminName(adminUser.name);
-                }
-                return;
-            }
-
-            console.log('[Admin] Cache bulunamadı, API çağrısı yapılıyor');
+            console.log('[Admin] API çağrısı yapılıyor...');
             // Cache yoksa API'den çek
             const result = await makeApiCall<ApiUser[]>(API_ENDPOINTS.GET_USERS);
             
@@ -233,7 +211,7 @@ function Admin() {
         }
     }, [users, setSelectedUser, onOpen]);
 
-    const handleUpdateUser = async () => {
+const handleUpdateUser = async () => {
         if (!selectedUser) {
             console.warn('[UpdateUser] Seçili kullanıcı yok.');
             return;
@@ -244,14 +222,15 @@ function Admin() {
           email: selectedUser.email,
           name: selectedUser.name,
           surname: selectedUser.name,
+          password: selectedUser.password,
           uniqueId: selectedUser.uniqueId,
           phoneNumber: selectedUser.phoneNumber,
           userLevel: selectedUser.userLevel,
+          userLevelId: selectedUser.userLevelId,
           accountAgent: selectedUser.accountAgent,
           document: selectedUser.document,
           service: selectedUser.service,
           security: selectedUser.security,
-          documents: selectedUser.documents
         };
 
         const token = getAuthToken();
@@ -495,7 +474,9 @@ function Admin() {
                 </Box>
 
                 <Box mt={4}>
-                    {users.map((user) => (
+                    {users
+                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                        .map((user) => (
                         <Box
                             key={user.uniqueId}
                             bg="rgba(0, 0, 0, 0.3)"
@@ -510,16 +491,16 @@ function Admin() {
                                 gap={4}
                                 alignItems="center"
                             >
-                                <GridItem color="white">
+                                <GridItem color="white" >
                                     <Text>{user.uniqueId}</Text>
                                 </GridItem>
                                 <GridItem color="white">
                                     <Text>{user.name}</Text>
                                 </GridItem>
-                                <GridItem color="white">
+                                <GridItem color="white" minWidth="250px">
                                     <Text>{user.email}</Text>
                                 </GridItem>
-                                <GridItem color="white">
+                                <GridItem color="white" >
                                     <Text>{user.accountAgent || "Global Team"}</Text>
                                 </GridItem>
                                 <GridItem color="white">
@@ -535,7 +516,7 @@ function Admin() {
                                     <Text>{user.security || "Password"}</Text>
                                 </GridItem>
                                 <GridItem color="white">
-                                    <Text p={2} w= "100%" textAlign="center" borderRadius="lg" fontSize="xs" bg={user.isEmailApproved ? 'green' : 'red'}>
+                                    <Text p={2} w="100%" textAlign="center" borderRadius="lg" fontSize="xs" bg={user.isEmailApproved ? 'green' : 'red'}>
                                         Email Verification
                                     </Text>
                                 </GridItem>
@@ -563,21 +544,43 @@ function Admin() {
                             </Grid>
                         </Box>
                     ))}
+                    {users.length > itemsPerPage && (
+                        <Flex justify="center" mt={4} gap={2}>
+                            <Button
+                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                disabled={currentPage === 1}
+                                size="sm"
+                                colorScheme="teal"
+                                variant="outline"
+                            >
+                                Previous Page
+                            </Button>
+                            <Text color="white" alignSelf="center">
+                                Page {currentPage} / {Math.ceil(users.length / itemsPerPage)}
+                            </Text>
+                            <Button
+                                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(users.length / itemsPerPage), prev + 1))}
+                                disabled={currentPage === Math.ceil(users.length / itemsPerPage)}
+                                size="sm"
+                                colorScheme="teal"
+                                variant="outline"
+                            >
+                                Next Page
+                            </Button>
+                        </Flex>
+                    )}
                 </Box>
             </Box>
 
-            <Modal isOpen={isOpen} onClose={onClose} size="xl">
-                <ModalOverlay
-                    bg="blackAlpha.700"
-                    backdropFilter="blur(10px)"
-                />
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
                 <ModalContent
-                    bg="rgba(0, 0, 0, 0.8)"
+                    bg="rgba(0, 0, 0, 1)"
                     border="1px solid rgba(54, 176, 226, 0.5)"
                     borderRadius="xl"
-                    p={4}
+                    p={20}
                 >
-                    <ModalHeader>Kullanıcı Düzenle</ModalHeader>
+                    <ModalHeader>Edit User</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
                         <Grid templateColumns="repeat(2, 1fr)" gap={4}>
@@ -586,7 +589,6 @@ function Admin() {
                                 <Input
                                     value={selectedUser?.uniqueId || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, uniqueId: e.target.value } : null)}
-                                    readOnly
                                 />
                             </FormControl>
                             <FormControl>
@@ -594,6 +596,23 @@ function Admin() {
                                 <Input
                                     value={selectedUser?.name || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, name: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Email</FormLabel>
+                                <Input
+                                    value={selectedUser?.email || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, email: e.target.value } : null)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel>Password</FormLabel>
+                                <Input
+                                    type="password"
+                                    value={selectedUser?.password || ''}
+                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, password: e.target.value } : null)}
                                 />
                             </FormControl>
 
@@ -607,10 +626,28 @@ function Admin() {
 
                             <FormControl>
                                 <FormLabel>User Level</FormLabel>
-                                <Input
-                                    value={selectedUser?.userLevel || ''}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, userLevel: e.target.value } : null)}
-                                />
+                                <Select
+                                    style={{ padding: '8px' }}
+                                    bg="rgba(0, 0, 0, 0.3)"
+                                    color="white"
+                                    borderRadius="5px"
+                                    border="2px solid rgba(54, 176, 226, 0.5)"
+                                    iconColor="black"
+                                    value={selectedUser?.userLevel || 'Basic'}
+                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                        const level = e.target.value;
+                                        const levelId = level === 'Basic' ? '1' : level === 'Premium' ? '2' : '3';
+                                        setSelectedUser(prev => prev ? { 
+                                            ...prev, 
+                                            userLevel: level,
+                                            userLevelId: levelId 
+                                        } : null);
+                                    }}
+                                >
+                                    <option value="Basic" style={{ padding: '8px', backgroundColor: 'rgba(0, 0, 0, 1)', color: 'white', borderRadius: 'lg' }}>Basic</option>
+                                    <option value="Premium" style={{ padding: '8px', backgroundColor: 'rgba(0, 0, 0, 1)', color: 'white', borderRadius: 'lg' }}>Premium</option>
+                                    <option value="Admin" style={{ padding: '8px', backgroundColor: 'rgba(0, 0, 0, 1)', color: 'white', borderRadius: 'lg' }}>Admin</option>
+                                </Select>
                             </FormControl>
 
                             <FormControl>
@@ -642,14 +679,6 @@ function Admin() {
                                 <Input
                                     value={selectedUser?.security || ''}
                                     onChange={(e) => setSelectedUser(prev => prev ? { ...prev, security: e.target.value } : null)}
-                                />
-                            </FormControl>
-
-                            <FormControl>
-                                <FormLabel>Documents</FormLabel>
-                                <Input
-                                    value={selectedUser?.documents || ''}
-                                    onChange={(e) => setSelectedUser(prev => prev ? { ...prev, documents: e.target.value } : null)}
                                 />
                             </FormControl>
                         </Grid>
