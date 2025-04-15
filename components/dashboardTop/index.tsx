@@ -69,7 +69,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [passwordData, setPasswordData] = useState<PasswordData>({
-    email: '',
+    email: typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '',
     password: ''
   });
   const [passwordError, setPasswordError] = useState('');
@@ -361,8 +361,8 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
                 <Input
                   type="email"
                   value={passwordData.email}
-                  onChange={(e) => setPasswordData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter your email"
+                  readOnly
+                  placeholder="Your email"
                   size={{ base: 'sm', md: 'md' }}
                   bg="transparent"
                   color="white"
@@ -402,7 +402,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
 
       // Validation
       console.log("Validation yapılıyor...");
-      if (!passwordData.email || !passwordData.password) {
+      if (!passwordData.password) {
         console.warn("Eksik alanlar var:", passwordData);
         setPasswordError('Please fill in all fields');
         return;
@@ -427,10 +427,13 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
       console.log("LocalStorage'dan alınan authData:", parsedAuthData);
 
       const endpoint = 'https://intfinex.azurewebsites.net/api/User/UpdateUserPassword';
+      const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '';
       const bodyData = {
-        email: passwordData.email,
+        email: userEmail,
         password: passwordData.password
       };
+      // Güvenlik için state'i de güncelle
+      setPasswordData(prev => ({ ...prev, email: userEmail }));
 
       console.log("API endpoint:", endpoint);
       console.log("Gönderilen veri:", bodyData);
