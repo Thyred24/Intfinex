@@ -132,7 +132,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
   ]
 
   return (
-    <Box w="full" top={0} zIndex={10} bg="transparent" pt={{ base: 100, md: 150 }}>
+    <Box w="full" top={0} zIndex={10} bg="transparent" pt={{ base: 150, md: 200 }}>
       <Box maxW="1400px" mx="auto" px={{ base: 4, md: 6, lg: 8 }} py={{ base: 2, md: 4 }}>
         {/* Mobile View */}
         <Flex
