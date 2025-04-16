@@ -4,6 +4,7 @@ import { Box, Flex, Grid, Text } from '@chakra-ui/react'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@chakra-ui/toast'
+import { fetchUserByEmail } from '@/src/fetchUserByEmail';
 
 interface User {
   uniqueId: string;
@@ -76,20 +77,12 @@ function Dashboard() {
         const token = userData.data[0];
         console.log("[Dashboard] Kullanılacak token:", token);
 
-        const response = await fetch('https://intfinex.azurewebsites.net/api/User/GetList', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const user = await fetchUserByEmail(userEmail, token);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("[Dashboard] API Hata yanıtı:", errorText);
+        if (!user) {
           toast({
             title: 'API Hatası',
-            description: `Kullanıcı bilgileri alınamadı (${response.status})`,
+            description: `Kullanıcı bilgileri alınamadı`,
             status: 'error',
             duration: 3000,
             isClosable: true,
@@ -98,10 +91,7 @@ function Dashboard() {
           return;
         }
 
-        const result = await response.json();
-        console.log("[Dashboard] API'den gelen kullanıcı listesi:", result);
-
-        if (!result.isSuccess || !result.data) {
+        if (!user) {
           console.log("[Dashboard] API yanıtı başarısız ya da veri yok");
           toast({
             title: 'Veri Hatası',
@@ -115,10 +105,7 @@ function Dashboard() {
         }
 
         console.log("[Dashboard] Aranan email:", userEmail);
-        const currentUser = result.data.find((u: User) => {
-          console.log("[Dashboard] Karşılaştırılan kullanıcı:", u);
-          return u.email === userEmail;
-        });
+        const currentUser = user;
 
         console.log("[Dashboard] Bulunan kullanıcı:", currentUser);
 
@@ -127,7 +114,7 @@ function Dashboard() {
 
           // Kullanıcı listesini localStorage'a kaydet
           console.log('[Dashboard] Kullanıcı listesi localStorage\'a kaydediliyor');
-          localStorage.setItem('userList', JSON.stringify(result.data));
+          localStorage.setItem('userList', JSON.stringify([currentUser]));
 
           // Check if user is admin and redirect
           if (currentUser.userLevel === 'Admin') {

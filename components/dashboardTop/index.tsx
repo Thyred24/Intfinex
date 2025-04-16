@@ -37,6 +37,8 @@ import {
 import { useToast } from '@chakra-ui/toast'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
+import { fetchUserByEmail } from '@/src/fetchUserByEmail';
+
 
 interface DashboardTopProps {
   onViewChange: (view: string) => void;
@@ -55,12 +57,6 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
     phoneNumber: string;
   }
 
-  interface ApiResponse {
-    data: UserData[];
-    isSuccess: boolean;
-    errors: string[];
-  }
-
   interface PasswordData {
     email: string;
     password: string;
@@ -75,55 +71,27 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
   const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const authData = localStorage.getItem('userData');
-        if (!authData) {
-          router.push('/login');
-          return;
-        }
-
-        const parsedAuthData = JSON.parse(authData);
-        if (!parsedAuthData.isSuccess || !parsedAuthData.data || parsedAuthData.data.length === 0) {
-          router.push('/login');
-          return;
-        }
-
-        const userEmail = localStorage.getItem('userEmail');
-        if (!userEmail) {
-          router.push('/login');
-          return;
-        }
-
-        const response = await fetch('https://intfinex.azurewebsites.net/api/User/GetList', {
-          headers: {
-            'Authorization': `Bearer ${parsedAuthData.data[0]}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        const data: ApiResponse = await response.json();
-        console.log('API response:', data);
-
-        if (data.isSuccess && data.data) {
-          const userInfo = data.data.find(user => user.email === userEmail);
-          if (userInfo) {
-            setUserData(userInfo);
-          } else {
-            console.error('User not found in API response');
-            router.push('/');
-          }
-        } else {
-          console.error('API request failed:', data.errors);
-          router.push('/');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
+    const fetchData = async () => {
+      const authData = localStorage.getItem('userData');
+      const userEmail = localStorage.getItem('userEmail');
+  
+      if (!authData || !userEmail) {
+        router.push('/login');
+        return;
+      }
+  
+      const parsedAuthData = JSON.parse(authData);
+      const token = parsedAuthData.data[0];
+  
+      const user = await fetchUserByEmail(userEmail, token);
+      if (user) {
+        setUserData(user);
+      } else {
         router.push('/');
       }
     };
-
-    fetchUserData();
+  
+    fetchData();
   }, [router]);
 
   const items = [
