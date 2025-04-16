@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Box, Button, Flex, Heading, Link, Text} from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/toast'
 import CustomInput from '../ui/loginInput'
@@ -30,6 +30,13 @@ function Hero() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    // LocalStorage'da userData var mı kontrol et
+    const userData = localStorage.getItem('userData');
+    setIsLoggedIn(!!userData);
+  }, []);
 
   // Email doğrulama kodu doğrulama fonksiyonu
   const validateEmailCode = async () => {
@@ -396,6 +403,8 @@ function Hero() {
               w={{ base: '100%', lg: '50%' }}
               maxW={{ base: '500px', lg: '500px' }}
               mx="auto"
+              opacity={isLoggedIn ? 0.3 : 1}
+              pointerEvents={isLoggedIn ? 'none' : 'auto'}
             >
               <RegisterInput />
             </Box>
@@ -407,6 +416,8 @@ function Hero() {
               display="flex"
               flexDirection="column"
               alignItems="center"
+              opacity={isLoggedIn ? 0.3 : 1}
+              pointerEvents={isLoggedIn ? 'none' : 'auto'}
             >
               <Box width="100%" maxW="400px">
                 <Box mb={{ base: 2, md: 4 }} mt={{ base: 0, lg: 4 }}>

@@ -7,11 +7,18 @@ import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons'
 import Btn from '../ui/button'
 import { useRouter } from 'next/navigation'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 function Header() {
   const router = useRouter();
   const { open: isOpen, onToggle } = useDisclosure();
   const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('userData');
+    setIsLoggedIn(!!userData);
+  }, []);
 
   if (pathname === "/admin") {
     return null;
@@ -45,7 +52,7 @@ function Header() {
         <Flex gap={{ base: 3, md: 5 }} alignItems="center" mt={{ base: 0, md: 8 }}>
           <Link href="/">
             <Image 
-              src="/images/intfinex-logo.jpg"
+              src="/images/logo.png"
               alt="Logo"
               width={70}
               height={70}
@@ -69,7 +76,10 @@ function Header() {
         </Flex>
 
         <Box textAlign="right" mt={8}>
-          <Btn buttonText="Register" onClick={() => router.push('/register')} />
+          <Btn 
+            buttonText={isLoggedIn ? "Dashboard" : "Register"} 
+            onClick={() => router.push(isLoggedIn ? '/dashboard' : '/register')} 
+          />
         </Box>
       </Grid>
 
@@ -133,7 +143,11 @@ function Header() {
             <Link href="/contact" onClick={onToggle}>Contact</Link>
             <Link href="/faq" onClick={onToggle}>FAQ</Link>
             <Box>
-              <Btn buttonText="Register" width="full" />
+              <Btn 
+                buttonText={isLoggedIn ? "Dashboard" : "Register"} 
+                onClick={() => router.push(isLoggedIn ? '/dashboard' : '/register')} 
+                width="full" 
+              />
             </Box>
           </Stack>
         </Box>

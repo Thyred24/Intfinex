@@ -8,7 +8,7 @@ import ContactUs from '@/components/contact'
 function HomeContainer() {
   return (
     <>
-      <Hero />
+      <Hero  />
       <InfoSection />
       <AboutUs />
       <Faq />
