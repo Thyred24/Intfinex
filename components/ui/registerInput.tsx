@@ -14,6 +14,8 @@ import { useSteps } from '@chakra-ui/stepper';
 import { LuLock } from 'react-icons/lu';
 import React, { useState } from 'react';
 import { FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import CustomButton from '@/components/ui/button';
 import { environment } from '@/app/config/environment';
 
@@ -26,15 +28,6 @@ interface FormData {
   verificationCode: string;
   userId: string;
   [key: string]: string | undefined;
-}
-
-interface RegisterApiResponse {
-  data: Array<{
-    id: string;
-    email: string;
-  }>;
-  isSuccess: boolean;
-  errors: string[];
 }
 
 export default function RegisterInput(props: StackProps) {
@@ -54,7 +47,7 @@ export default function RegisterInput(props: StackProps) {
   const [loading, setLoading] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [verificationMessage, setVerificationMessage] = useState('');
-
+  const [registrationError, setRegistrationError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -87,10 +80,10 @@ export default function RegisterInput(props: StackProps) {
         });
         return false;
       }
-      if (formData.phoneNumber && formData.phoneNumber.length !== 10) {
+      if (formData.phoneNumber && formData.phoneNumber.length < 10) {
         toast({
           title: 'Error',
-          description: 'Phone number must be exactly 10 digits',
+          description: 'Please enter a valid phone number',
           status: 'error',
           duration: 3000,
           isClosable: true,
@@ -362,6 +355,7 @@ export default function RegisterInput(props: StackProps) {
 
     try {
       setLoading(true);
+      setRegistrationError(''); // Her denemede hata mesajını temizle
       console.log('Starting registration process...');
       
       // Geçici bir uniqueId oluştur
@@ -388,24 +382,37 @@ export default function RegisterInput(props: StackProps) {
         }),
       });
 
-      const registerData = await registerResponse.text();
-      console.log('Raw register response:', registerData);
-      
-      let data: RegisterApiResponse;
-      try {
-        data = JSON.parse(registerData);
-        console.log('Parsed registration response:', data);
-      } catch (e) {
-        console.error('Failed to parse register response:', e);
-        throw new Error('Invalid response from registration API');
-      }
+      const result = await registerResponse.json();
 
-      if (!registerResponse.ok || !data.isSuccess) {
-        throw new Error(data.errors?.[0] || 'Registration failed');
+      if (registerResponse.ok && result.isSuccess) {
+        const userId = result.data[0].id;
+        const userEmail = result.data[0].email;
+
+        // Kullanıcı bilgilerini localStorage'a kaydet
+        localStorage.setItem('userData', JSON.stringify(result.data[0]));
+        localStorage.setItem('userEmail', userEmail);
+
+        // userId'yi state'e kaydet
+        setFormData(prev => ({ ...prev, userId }));
+
+        // Email doğrulama kodunu gönder
+        await sendEmailCode();
+
+      } else {
+        // API'den gelen hata mesajını göster
+        const errorMsg = result.errors?.[0] || 'Registration failed';
+        setRegistrationError(errorMsg);
+        toast({
+          title: 'Error',
+          description: errorMsg,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
       }
 
       // API'nin döndüğü ID'yi al
-      const userId = data.data?.[0]?.id;
+      const userId = result.data[0].id;
       if (!userId) {
         throw new Error('User ID not received from registration');
       }
@@ -447,6 +454,7 @@ export default function RegisterInput(props: StackProps) {
 
       if (!emailResponse.ok || !emailResponseData.isSuccess) {
         const errorMessage = emailResponseData.errors?.[0] || 'Email gönderimi başarısız oldu. Lütfen tekrar deneyin.';
+        setRegistrationError(errorMessage);
         toast({
           title: 'Hata',
           description: errorMessage,
@@ -567,21 +575,13 @@ export default function RegisterInput(props: StackProps) {
     }
   };
 
-
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-      e.preventDefault();
-    }
-  };
-
   type InputField = [string, string, React.ComponentType];
 
   const inputFields: InputField[] = [
     ['name', 'Name', FaUser],
     ['email', 'Email', FaEnvelope],
-    ['phoneNumber', 'Phone Number', FaPhone], 
-    ['password', 'Password', LuLock], 
+    ['password', 'Password', LuLock],
+    ['phoneNumber', 'Phone Number', FaPhone],
   ];
 
   const styles = {
@@ -639,42 +639,79 @@ return (
               backdropFilter="blur(5px)" 
               mb={{ base: "10px", sm: "15px" }}
               width={{ base: "220%", sm: "220%", md: "220%" }}
+              zIndex={1}
             >
-              <Flex width="100%">
+              <Flex width="100%" position="relative">
                 <Box 
                   position="absolute" 
                   left={{ base: "2", sm: "3" }} 
                   top="50%" 
                   transform="translateY(-50%)" 
-                  zIndex={1} 
                   fontSize={{ base: 16, sm: 18, md: 20 }} 
                   color="#36b0e2"
+                  {...(name === 'phoneNumber' ? { display: 'none' } : {})}  
                 >
                   <Icon />
                 </Box>
-                <ChakraInput
-                  name={name}
-                  height={{ base: "40px", sm: "45px", md: "50px" }}
-                  width="100%"
-                  type={name === 'password' ? 'password' : name === 'phoneNumber' ? 'tel' : 'text'}
-                  placeholder={placeholder}
-                  borderColor="#36b0e2"
-                  value={formData[name]}
-                  onChange={handleChange}
-                  onKeyDown={name === 'phoneNumber' ? handleKeyPress : undefined}
-                  maxLength={name === 'phoneNumber' ? 10 : undefined}
-                  pl={{ base: 8, sm: 10 }}
-                  fontSize={{ base: "14px", sm: "15px", md: "16px" }}
-                  _focus={{ 
-                    boxShadow: '0 0 0 1px #36b0e2',
-                    borderColor: '#36b0e2'
-                  }}
-                />
-                {name === 'phoneNumber' && formData.phoneNumber && formData.phoneNumber.length !== 10 && (
-                  <Text color="red.500" fontSize="sm" mt={1} ml={1}>
-                    10 Character
-                  </Text>
+                {name === 'phoneNumber' ? (
+                  <PhoneInput
+                    country={'tr'}
+                    value={formData.phoneNumber}
+                    onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value }))}
+                    inputStyle={{
+                      width: '100%',
+                      height: '50px',
+                      fontSize: '16px',
+                      backgroundColor: 'transparent',
+                      border: '1px solid #36b0e2',
+                      borderRadius: '0.375rem',
+                      color: 'white',
+                      paddingLeft: '48px'
+                    }}
+                    buttonStyle={{
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      borderRight: '1px solid #36b0e2',
+                      borderRadius: '0.375rem 0 0 0.375rem'
+                    }}
+                    enableSearch={true}
+                    searchClass="phone-search-input"
+                    containerClass="phone-input-container"
+                    dropdownStyle={{
+                      backgroundColor: '#000A1C',
+                      color: 'white',
+                      border: '1px solid #36b0e2',
+                      position: 'fixed',
+                    }}
+                    searchStyle={{
+                      backgroundColor: '#000A1C',
+                      color: 'white',
+                      border: '1px solid #36b0e2'
+                    }}
+                    containerStyle={{
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  />
+                ) : (
+                  <ChakraInput
+                    name={name}
+                    height={{ base: "40px", sm: "45px", md: "50px" }}
+                    width="100%"
+                    type={name === 'password' ? 'password' : 'text'}
+                    placeholder={placeholder}
+                    borderColor="#36b0e2"
+                    value={formData[name]}
+                    onChange={handleChange}
+                    pl={{ base: 8, sm: 10 }}
+                    fontSize={{ base: "14px", sm: "15px", md: "16px" }}
+                    _focus={{ 
+                      boxShadow: '0 0 0 1px #36b0e2',
+                      borderColor: '#36b0e2'
+                    }}
+                  />
                 )}
+
                 {name === 'password' && formData.password && formData.password.length < 6 && (
                   <Text color="red.500" fontSize="sm" mt={1} ml={1}>
                     Min 6 Character
@@ -683,6 +720,13 @@ return (
                 </Flex>
               </InputGroup>
             ))}
+            {registrationError && (
+            <Box mb={4} textAlign="center" width="100%">
+              <Text color="red.500" fontSize="sm">
+                {registrationError}
+              </Text>
+            </Box>
+          )}
         </Box>
       )}
 
@@ -775,11 +819,11 @@ return (
             colorScheme={isSuccess ? 'green' : 'blue'}
             width="100%"
             loading={loading}
-            loadingText="Doğrulanıyor..."
+            loadingText="Verifying..."
             mb={4}
             disabled={isSuccess}
           >
-            {verificationStatus === 'success' ? 'Doğrulandı!' : 'Doğrula'}
+            {verificationStatus === 'success' ? 'Verified!' : 'Verify'}
           </Button>
           
           <Button
@@ -793,7 +837,7 @@ return (
             fontSize={{ base: "xs", sm: "sm" }}
             _hover={{ color: '#36b0e2' }}
             loading={loading}
-            loadingText="Gönderiliyor..."
+            loadingText="Sending..."
           >
             Resend code
           </Button>
