@@ -16,7 +16,7 @@ interface User {
   status?: string;
   document?: string;
   service?: string;
-  createdDate?: string;
+  registerDate?: string;
   security?: string;
   documents?: string;
 }
@@ -177,7 +177,7 @@ function Dashboard() {
     { name: "Statu", data: user.userLevel || "Basic" },
     { name: "Document", data: user.document || "N/A" },
     { name: "Service", data: user.service || "N/A" },
-    { name: "Registration", data: user.createdDate || "Unknown" },
+    { name: "Registration", data: user.registerDate || "Unknown" },
   ];
 
   return (
