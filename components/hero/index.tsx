@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Box, Flex, Heading, Link, Text} from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, Link, Text} from '@chakra-ui/react'
 import { useToast } from '@chakra-ui/toast'
 import CustomInput from '../ui/loginInput'
 import CustomButton from '../ui/button'
@@ -437,6 +437,21 @@ function Hero() {
                       width="100%"
                       mt={2}
                     />
+                    <Button
+                                onClick={async () => {
+                                  setIsLoading(true);
+                                  await sendEmail(currentUserId);
+                                  setIsLoading(false);
+                                }}
+                                variant="ghost"
+                                color="blue.400"
+                                fontSize={{ base: "xs", sm: "sm" }}
+                                _hover={{ color: '#36b0e2' }}
+                                loading={isLoading}
+                                loadingText="Gönderiliyor..."
+                              >
+                                Resend code
+                              </Button>
                     {isSuccess && (
                       <Box mb={{ base: 2, md: 4 }} textAlign="center">
                         <Text color="green.500" fontSize="sm">

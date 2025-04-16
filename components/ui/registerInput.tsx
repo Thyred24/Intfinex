@@ -795,7 +795,7 @@ return (
             loading={loading}
             loadingText="Gönderiliyor..."
           >
-            Kodu Tekrar Gönder
+            Resend code
           </Button>
         </Flex>
       </Box>
