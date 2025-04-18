@@ -8,6 +8,7 @@ import {
   Button,
 } from '@chakra-ui/react';
 import { Alert, AlertIcon, AlertTitle, AlertDescription } from '@chakra-ui/alert';
+import { useEffect } from 'react';
 
 import { useToast } from '@chakra-ui/toast';
 import { useSteps } from '@chakra-ui/stepper';
@@ -48,11 +49,26 @@ export default function RegisterInput(props: StackProps) {
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [verificationMessage, setVerificationMessage] = useState('');
   const [registrationError, setRegistrationError] = useState('');
+  const [isPhoneDropdownOpen, setIsPhoneDropdownOpen] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+  
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const dropdown = document.querySelector('.react-tel-input .country-list') as HTMLElement;
+      if (dropdown && dropdown.style.display !== 'none') {
+        setIsPhoneDropdownOpen(true);
+      } else {
+        setIsPhoneDropdownOpen(false);
+      }
+    }, 200); // sürekli kontrol et
+  
+    return () => clearInterval(interval); // temizlik
+  }, []);
 
 
 
@@ -580,8 +596,8 @@ export default function RegisterInput(props: StackProps) {
   const inputFields: InputField[] = [
     ['name', 'Name', FaUser],
     ['email', 'Email', FaEnvelope],
-    ['password', 'Password', LuLock],
     ['phoneNumber', 'Phone Number', FaPhone],
+    ['password', 'Password', LuLock]
   ];
 
   const styles = {
@@ -631,86 +647,93 @@ return (
           gridTemplateColumns={{ base: "1fr", md: "repeat(1, 1fr)" }} 
           width="45%" 
         >
-          {inputFields.map(([name, placeholder, Icon]) => (
-            <InputGroup 
-              key={name} 
-              flex="1" 
-              bg="transparent" 
-              backdropFilter="blur(5px)" 
-              mb={{ base: "10px", sm: "15px" }}
-              width={{ base: "220%", sm: "220%", md: "220%" }}
-              zIndex={1}
-            >
-              <Flex width="100%" position="relative">
-                <Box 
-                  position="absolute" 
-                  left={{ base: "2", sm: "3" }} 
-                  top="50%" 
-                  transform="translateY(-50%)" 
-                  fontSize={{ base: 16, sm: 18, md: 20 }} 
-                  color="#36b0e2"
-                  {...(name === 'phoneNumber' ? { display: 'none' } : {})}  
+          {inputFields.map(([name, placeholder, Icon]) => {
+              const isPhoneNumberField = name === 'phoneNumber';
+
+              return (
+                <InputGroup 
+                  key={name} 
+                  flex="1" 
+                  bg="transparent" 
+                  backdropFilter="blur(5px)" 
+                  mb={{ base: "10px", sm: "15px" }}
+                  width={{ base: "220%", sm: "220%", md: "220%" }}
+                  pb={isPhoneNumberField && isPhoneDropdownOpen ? "200px" : "0"}
+                  zIndex={1}
+                >
+                  <Flex width="100%" position="relative">
+                    <Box 
+                      position="absolute" 
+                      left={{ base: "2", sm: "3" }} 
+                      top="50%" 
+                      transform="translateY(-50%)" 
+                      fontSize={{ base: 16, sm: 18, md: 20 }} 
+                      {...(isPhoneNumberField ? { display: 'none' } : {})}
+                      color="#36b0e2"
+                      {...(name === 'phoneNumber' ? { display: 'none' } : {})}  
                 >
                   <Icon />
                 </Box>
-                {name === 'phoneNumber' ? (
-                  <PhoneInput
-                    country={'tr'}
-                    value={formData.phoneNumber}
-                    onChange={(value) => setFormData(prev => ({ ...prev, phoneNumber: value }))}
-                    inputStyle={{
-                      width: '100%',
-                      height: '50px',
-                      fontSize: '16px',
-                      backgroundColor: 'transparent',
-                      border: '1px solid #36b0e2',
-                      borderRadius: '0.375rem',
-                      color: 'white',
-                      paddingLeft: '48px'
-                    }}
-                    buttonStyle={{
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      borderRight: '1px solid #36b0e2',
-                      borderRadius: '0.375rem 0 0 0.375rem'
-                    }}
-                    enableSearch={true}
-                    searchClass="phone-search-input"
-                    containerClass="phone-input-container"
-                    dropdownStyle={{
-                      backgroundColor: '#000A1C',
-                      color: 'white',
-                      border: '1px solid #36b0e2',
-                      position: 'fixed',
-                    }}
-                    searchStyle={{
-                      backgroundColor: '#000A1C',
-                      color: 'white',
-                      border: '1px solid #36b0e2'
-                    }}
-                    containerStyle={{
-                      width: '100%',
-                      position: 'relative',
-                    }}
-                  />
-                ) : (
-                  <ChakraInput
-                    name={name}
-                    height={{ base: "40px", sm: "45px", md: "50px" }}
-                    width="100%"
-                    type={name === 'password' ? 'password' : 'text'}
-                    placeholder={placeholder}
-                    borderColor="#36b0e2"
-                    value={formData[name]}
-                    onChange={handleChange}
-                    pl={{ base: 8, sm: 10 }}
-                    fontSize={{ base: "14px", sm: "15px", md: "16px" }}
-                    _focus={{ 
-                      boxShadow: '0 0 0 1px #36b0e2',
-                      borderColor: '#36b0e2'
-                    }}
-                  />
-                )}
+                {isPhoneNumberField ? (
+          <PhoneInput
+            country={'tr'}
+            value={formData.phoneNumber}
+            onChange={(value) =>
+              setFormData((prev) => ({ ...prev, phoneNumber: value }))
+            }
+            inputStyle={{
+              width: '100%',
+              height: '50px',
+              fontSize: '16px',
+              backgroundColor: 'transparent',
+              border: '1px solid #36b0e2',
+              borderRadius: '0.375rem',
+              color: 'white',
+              paddingLeft: '48px',
+            }}
+            buttonStyle={{
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderRight: '1px solid #36b0e2',
+              borderRadius: '0.375rem 0 0 0.375rem',
+            }}
+            enableSearch={true}
+            searchClass="phone-search-input"
+            containerClass="phone-input-container"
+            dropdownStyle={{
+              backgroundColor: '#000A1C',
+              color: 'white',
+              border: '1px solid #36b0e2',
+              position: 'fixed',
+            }}
+            searchStyle={{
+              backgroundColor: '#000A1C',
+              color: 'white',
+              border: '1px solid #36b0e2',
+            }}
+            containerStyle={{
+              width: '100%',
+              position: 'relative',
+            }}
+          />
+        ) : (
+          <ChakraInput
+            name={name}
+            height={{ base: "40px", sm: "45px", md: "50px" }}
+            width="100%"
+            type={name === 'password' ? 'password' : 'text'}
+            placeholder={placeholder}
+            borderColor="#36b0e2"
+            value={formData[name]}
+            onChange={handleChange}
+            pl={{ base: 8, sm: 10 }}
+            fontSize={{ base: "14px", sm: "15px", md: "16px" }}
+            _focus={{
+              boxShadow: '0 0 0 1px #36b0e2',
+              borderColor: '#36b0e2',
+            }}
+          />
+        )}
 
                 {name === 'password' && formData.password && formData.password.length < 6 && (
                   <Text color="red.500" fontSize="sm" mt={1} ml={1}>
@@ -719,7 +742,8 @@ return (
                 )}
                 </Flex>
               </InputGroup>
-            ))}
+            )})
+          }
             {registrationError && (
             <Box mb={4} textAlign="center" width="100%">
               <Text color="red.500" fontSize="sm">

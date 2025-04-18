@@ -282,7 +282,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
                   <MenuItem
                     onClick={() => {
                       localStorage.removeItem("userData");
-                      router.push("/");
+                      window.location.href = "/";
                     }}
                     _hover={{ bg: 'rgba(255, 87, 34, 0.2)' }}
                     color="white"

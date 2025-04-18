@@ -9,6 +9,7 @@ import { useDisclosure } from '@chakra-ui/hooks'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useCallback } from 'react'
 import { environment } from '@/app/config/environment'
+import Btn from '@/components/ui/button'
 
 // API endpoint sabitleri
 const API_ENDPOINTS = {
@@ -51,39 +52,46 @@ interface ApiUser extends Omit<User, 'emailVerification' | 'smsVerification'> {
 
 // Token yönetimi için yardımcı fonksiyonlar
 const getAuthToken = () => {
-    console.log('[Admin] localStorage içeriği:', {
-        userData: localStorage.getItem('userData'),
-        userEmail: localStorage.getItem('userEmail')
-    });
-
-    const userDataStr = localStorage.getItem('userData');
-    if (!userDataStr) {
-        console.error('[Admin] userData bulunamadı');
-        throw new Error('Token bulunamadı');
+    const isAdmin = localStorage.getItem('adminAuthenticated') === 'true';
+  
+    if (isAdmin) {
+      console.log('[Admin] Giriş yapılmış, token gerekli değil.');
+      return ''; // token boş döndür, çünkü backend istemiyor
     }
-
+  
     try {
-        const userData = JSON.parse(userDataStr);
-        console.log('[Admin] Parse edilen userData:', userData);
-
-        if (!userData.data || !userData.data[0]) {
-            console.error('[Admin] Token verisi bulunamadı');
-            throw new Error('Token bulunamadı');
-        }
-
-        const token = userData.data[0];
-        console.log('[Admin] Kullanılacak token:', token);
-        return token;
+      const userDataStr = localStorage.getItem('userData');
+      if (!userDataStr) {
+        console.error('[User] userData bulunamadı.');
+        throw new Error('Token bulunamadı');
+      }
+  
+      const userData = JSON.parse(userDataStr);
+      if (!userData.data || !userData.data[0]) {
+        console.error('[User] Token verisi eksik:', userData);
+        throw new Error('Token bulunamadı');
+      }
+  
+      const token = userData.data[0];
+      console.log('[User] Kullanıcı token:', token);
+      return token;
     } catch (error) {
-        console.error('[Admin] Token parse hatası:', error);
-        throw new Error('Token formatı geçersiz');
+      console.error('[User] Token parse hatası:', error);
+      throw new Error('Token formatı geçersiz');
     }
-};
+  };
 
-const createAuthHeaders = (token: string) => ({
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-});
+  const createAuthHeaders = (token?: string) => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+  
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  
+    return headers;
+  };
 
 function Admin() {
     const [users, setUsers] = useState<User[]>([]);
@@ -94,6 +102,8 @@ function Admin() {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [itemsPerPage] = useState<number>(10);
     const { isOpen, onOpen, onClose } = useDisclosure();
+    const [newPassword, setNewPassword] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
     const router = useRouter();
     const toast = useToast();
 
@@ -101,41 +111,94 @@ function Admin() {
     const makeApiCall = useCallback(async <T,>(url: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
         console.log('[Admin] API çağrısı başlıyor:', url);
         try {
-            const token = getAuthToken();
-            console.log('[Admin] Token alındı:', token);
-            
-            const headers = createAuthHeaders(token);
-            console.log('[Admin] Oluşturulan headers:', headers);
-            
-            const response = await fetch(url, {
-                ...options,
-                headers: {
-                    ...createAuthHeaders(token),
-                    ...(options.headers || {})
-                }
-            });
-
-            console.log('[Admin] API yanıtı:', {
-                status: response.status,
-                statusText: response.statusText
-            });
-
-            if (!response.ok) {
-                console.error('[Admin] API hata yanıtı:', response.status, response.statusText);
-                throw new Error(`API yanıtı başarısız: ${response.status} ${response.statusText}`);
+          const token = getAuthToken();
+          const headers = createAuthHeaders(token);
+      
+          const response = await fetch(url, {
+            ...options,
+            headers: {
+              ...headers,
+              ...(options.headers || {})
             }
-
-            const result = await response.json();
-            if (!result.isSuccess) {
-                throw new Error(result.message || 'İşlem başarısız');
-            }
-
-            return result;
+          });
+      
+          if (!response.ok) {
+            throw new Error(`API yanıtı başarısız: ${response.status} ${response.statusText}`);
+          }
+      
+          const result = await response.json();
+          if (!result.isSuccess) {
+            throw new Error(result.message || 'İşlem başarısız');
+          }
+      
+          return result;
         } catch (error) {
-            console.error('[Admin] API çağrısı hatası:', error);
-            throw error;
+          console.error('[Admin] API çağrısı hatası:', error);
+          throw error;
         }
-    }, []);
+      }, []);
+
+      const handleButtonClick = () => {
+        if (!isEditing) {
+          // İlk tıklamada sadece input alanını aç
+          setIsEditing(true);
+        } else {
+          // İkinci tıklamada şifre güncellemesini yap
+          updatePassword();
+        }
+      };
+
+      const updatePassword = async () => {
+        if (!newPassword || newPassword.length < 6) {
+          toast({
+            title: 'Geçersiz şifre',
+            description: 'Şifre en az 6 karakter olmalı.',
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+    
+        setLoading(true);
+    
+        try {
+          const response = await fetch('https://intfinex.azurewebsites.net/api/Admin/UpdatePassword', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password: newPassword }),
+          });
+    
+          const result = await response.json();
+    
+          if (result.isSuccess) {
+            toast({
+              title: 'Şifre güncellendi',
+              description: 'Yeni şifreniz başarıyla kaydedildi.',
+              status: 'success',
+              duration: 3000,
+              isClosable: true,
+            });
+            setNewPassword('');
+            setIsEditing(false); // input alanını kapat
+          } else {
+            throw new Error(result.errors?.[0] || 'Bilinmeyen bir hata oluştu');
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu';
+          toast({
+            title: 'Hata oluştu',
+            description: errorMessage,
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
 
     // Kullanıcı listesini çekme
     const fetchUsers = useCallback(async () => {
@@ -356,6 +419,27 @@ const handleUpdateUser = async () => {
                 <Text fontSize="48px" fontWeight="bold" color="white">
                     Admin Panel
                 </Text>
+                {isEditing && (
+                    <Input
+                        type="password"
+                        placeholder="New Admin Password"
+                        value={newPassword}
+                        width="50%"
+                        border="1px solid #36b0e2"
+                        onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                )}
+
+                <Button
+                    onClick={handleButtonClick}
+                    loading={loading}
+                    bg="#36b0e2"
+                    _hover={{ bg: "linear-gradient(to top, #002047 1%, rgb(54, 176, 226) 10%, #002047 100%)", color: "#ffffff", transition: "all 0.3s ease" }}
+                    color="#000A1C"
+                    transition="all 0.3s ease"
+                >
+                    {isEditing ? 'Update Admin Password' : 'Update Admin Password'}
+                </Button>
                 <Flex alignItems="center" gap={4}>
                     <Text fontSize="24px" color="white">
                         <span style={{
@@ -365,13 +449,10 @@ const handleUpdateUser = async () => {
                             WebkitTextFillColor: 'transparent'
                         }}>{adminName}</span>
                     </Text>
-                    <Button
+                    <Btn 
+                        buttonText="Logout"
                         onClick={handleLogout}
-                        colorScheme="red"
-                        size="lg"
-                    >
-                        Logout
-                    </Button>
+                    />
                 </Flex>
             </Flex>
 
@@ -646,7 +727,6 @@ const handleUpdateUser = async () => {
                                 >
                                     <option value="Basic" style={{ padding: '8px', backgroundColor: 'rgba(0, 0, 0, 1)', color: 'white', borderRadius: 'lg' }}>Basic</option>
                                     <option value="Premium" style={{ padding: '8px', backgroundColor: 'rgba(0, 0, 0, 1)', color: 'white', borderRadius: 'lg' }}>Premium</option>
-                                    <option value="Admin" style={{ padding: '8px', backgroundColor: 'rgba(0, 0, 0, 1)', color: 'white', borderRadius: 'lg' }}>Admin</option>
                                 </Select>
                             </FormControl>
 
