@@ -189,7 +189,7 @@ export default function RegisterInput(props: StackProps) {
 
   const validateEmailCode = async () => {
     if (!formData.verificationCode) {
-      const errorMessage = 'Lütfen doğrulama kodunu girin';
+      const errorMessage = 'Please enter the verification code';
       setVerifyError(errorMessage);
       setVerificationStatus('error');
       setVerificationMessage(errorMessage);
@@ -199,7 +199,7 @@ export default function RegisterInput(props: StackProps) {
     try {
       setLoading(true);
       setVerificationStatus('idle');
-      setVerificationMessage('Doğrulama yapılıyor...');
+      setVerificationMessage('Verifying code...');
 
       console.log('Sending validation request:', {
         userId: formData.userId,
@@ -228,27 +228,27 @@ export default function RegisterInput(props: StackProps) {
         console.log('Validation successful');
         setVerifyError('');
         setVerificationStatus('success');
-        setVerificationMessage('Email doğrulama başarılı!');
+        setVerificationMessage('Email verification successful!');
         setIsSuccess(true);
 
         toast({
-          title: 'Başarılı',
-          description: 'Email adresiniz başarıyla doğrulandı!',
+          title: 'Success',
+          description: 'Email address successfully verified!',
           status: 'success',
           duration: 3000,
           isClosable: true,
         });
 
         try {
-          // Geçici kullanıcı bilgilerini al
+          // Get temporary user information
           const tempUserStr = localStorage.getItem('tempUser');
           if (!tempUserStr) {
-            throw new Error('Kullanıcı bilgileri bulunamadı');
+            throw new Error('User information not found');
           }
 
           const tempUser = JSON.parse(tempUserStr);
 
-          // Login denemesi yap
+          // Login attempt
           const loginResponse = await fetch('https://intfinex.azurewebsites.net/api/Login/Login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -258,7 +258,7 @@ export default function RegisterInput(props: StackProps) {
             })
           });
           
-          console.log("Giriş yapılacak bilgiler:", {
+          console.log("Login information:", {
             email: tempUser.email,
             password: tempUser.password
           });
@@ -267,26 +267,26 @@ export default function RegisterInput(props: StackProps) {
           console.log('StatusText:', loginResponse.statusText);
           
           if (!loginResponse.ok) {
-            throw new Error(`API hatası: ${loginResponse.status} ${loginResponse.statusText}`);
+            throw new Error(`API error: ${loginResponse.status} ${loginResponse.statusText}`);
           }
           
           const loginData = await loginResponse.json();
           console.log('Parsed login data:', loginData);
 
-          // API yanıtını kontrol et
+          // API response check
           console.log('Login response status:', loginResponse.status);
           console.log('Login response headers:', Object.fromEntries(loginResponse.headers.entries()));
 
           if (!loginResponse.ok) {
-            throw new Error(`API hatası: ${loginResponse.status} ${loginResponse.statusText}`);
+            throw new Error(`API error: ${loginResponse.status} ${loginResponse.statusText}`);
           }
 
           if (!loginData.isSuccess) {
-            throw new Error(loginData.errors?.[0] || 'Login başarısız oldu');
+            throw new Error(loginData.errors?.[0] || 'Login failed');
           }
 
-          // Login başarılı, kullanıcı bilgilerini kaydet
-          localStorage.clear(); // Geçici verileri temizle
+          // Login successful, save user information
+          localStorage.clear(); // Clear temporary data
 
           const userData = {
             ...tempUser,
@@ -306,14 +306,14 @@ export default function RegisterInput(props: StackProps) {
           return true;
         } catch (error: unknown) {
           console.error('Login error:', error);
-          let errorMessage = 'Giriş yapılırken bir hata oluştu';
+          let errorMessage = 'Login failed';
           
           if (error instanceof Error) {
             errorMessage = error.message;
           }
           
           toast({
-            title: 'Hata',
+            title: 'Error',
             description: errorMessage,
             status: 'error',
             duration: 3000,
@@ -322,7 +322,7 @@ export default function RegisterInput(props: StackProps) {
           return false;
         }
       } else {
-        const errorMessage = verifyData.errors?.[0] || 'Doğrulama başarısız oldu. Lütfen tekrar deneyin.';
+        const errorMessage = verifyData.errors?.[0] || 'Validation failed. Please try again.';
         console.log('Validation failed:', {
           responseOk: verifyResponse.ok,
           isSuccess: verifyData.isSuccess,
@@ -335,7 +335,7 @@ export default function RegisterInput(props: StackProps) {
         setVerificationMessage(errorMessage);
         
         toast({
-          title: 'Hata',
+          title: 'Error',
           description: errorMessage,
           status: 'error',
           duration: 3000,
@@ -345,15 +345,15 @@ export default function RegisterInput(props: StackProps) {
         return false;
       }
     } catch (error: unknown) {
-      console.error('Doğrulama hatası:', error);
-      const errorMessage = 'Doğrulama sırasında bir hata oluştu. Lütfen tekrar deneyin.';
+      console.error('Validation error:', error);
+      const errorMessage = 'Validation failed. Please try again.';
       
       setVerifyError(errorMessage);
       setVerificationStatus('error');
       setVerificationMessage(errorMessage);
       
       toast({
-        title: 'Hata',
+        title: 'Error',
         description: errorMessage,
         status: 'error',
         duration: 3000,
@@ -472,7 +472,7 @@ export default function RegisterInput(props: StackProps) {
         const errorMessage = emailResponseData.errors?.[0] || 'Email gönderimi başarısız oldu. Lütfen tekrar deneyin.';
         setRegistrationError(errorMessage);
         toast({
-          title: 'Hata',
+          title: 'Error',
           description: errorMessage,
           status: 'error',
           duration: 3000,
@@ -485,8 +485,8 @@ export default function RegisterInput(props: StackProps) {
       console.log('Email verification code sent successfully to:', formData.email);
       
       toast({
-        title: 'Başarılı',
-        description: 'Doğrulama kodu email adresinize gönderildi.',
+        title: 'Success',
+        description: 'Verification code sent to your email.',
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -774,7 +774,7 @@ return (
           >
             <AlertIcon boxSize="24px" mr={0} />
             <AlertTitle mt={2} mb={1}>
-              {verificationStatus === 'success' ? 'Başarılı!' : 'Hata!'}
+              {verificationStatus === 'success' ? 'Success!' : 'Error!'}
             </AlertTitle>
             <AlertDescription maxWidth="sm">
               {verificationMessage}
