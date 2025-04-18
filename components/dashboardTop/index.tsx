@@ -286,6 +286,9 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
                   <MenuItem
                     onClick={() => {
                       localStorage.removeItem("userData");
+                      localStorage.removeItem("userEmail");
+                      localStorage.removeItem("userList");
+                      localStorage.removeItem("tempUser");
                       window.location.href = "/";
                     }}
                     _hover={{ bg: 'rgba(255, 87, 34, 0.2)' }}

@@ -256,10 +256,19 @@ function Hero() {
               userLevel: currentUser.userLevel,
               isEmailApproved: currentUser.isEmailApproved
             });
-    
-            if (currentUser.isEmailApproved) {
-              console.log("[LOGIN] Email doğrulanmış, dashboard'a yönlendiriliyor...");
+
+            // Email validation kontrolü
+            const emailValidationStored = localStorage.getItem('emailValidation');
+            const emailValidation = emailValidationStored !== null ? emailValidationStored === 'true' : true;
+
+            if (!emailValidation || currentUser.isEmailApproved) {
+              console.log("[LOGIN] Email doğrulaması atlandı veya doğrulanmış, dashboard'a yönlendiriliyor...");
               setIsSuccess(true);
+              
+              // Geçici kullanıcı bilgilerini kaydet
+              localStorage.setItem('tempUser', JSON.stringify(currentUser));
+              localStorage.setItem('emailValidation', emailValidation.toString());
+
               toast({
                 title: 'Başarılı',
                 description: 'Giriş başarılı, yönlendiriliyorsunuz...',
@@ -279,31 +288,53 @@ function Hero() {
                 }
               }, 1000);
             } else {
-              console.log("[LOGIN] Email doğrulanmamış, yeni doğrulama kodu gönderiliyor...");
-              setErrorMessage('Please perform email integration');
-              // Yeni doğrulama kodu gönder
-              if (currentUser.id) {
-                setCurrentUserId(currentUser.id);
-                setShowVerification(true);
-                sendEmail(currentUser.id);
-              } else {
-                console.error('[LOGIN] User ID bulunamadı');
+              // Email validation kontrolü
+              const emailValidationStored = localStorage.getItem('emailValidation');
+              const emailValidation = emailValidationStored !== null ? emailValidationStored === 'true' : true;
+
+              if (!emailValidation) {
+                // Email doğrulama devre dışı, kullanıcı doğrudan dashboard'a yönlendiriliyor
+                console.log("[LOGIN] Email doğrulama devre dışı, kullanıcı doğrudan dashboard'a yönlendiriliyor");
+                localStorage.removeItem('needsEmailVerification'); // needsEmailVerification bayrağını kaldır
+                setIsSuccess(true);
                 toast({
-                  title: 'Hata',
-                  description: 'Kullanıcı ID bulunamadı',
-                  status: 'error',
+                  title: 'Başarılı',
+                  description: 'Giriş başarılı, yönlendiriliyorsunuz...',
+                  status: 'success',
                   duration: 3000,
                   isClosable: true,
                 });
+                setTimeout(() => {
+                  window.location.href = '/dashboard';
+                }, 1000);
+              } else {
+                // Normal email doğrulama akışı
+                console.log("[LOGIN] Email doğrulanmamış, yeni doğrulama kodu gönderiliyor...");
+                setErrorMessage('Please perform email integration');
+                // Yeni doğrulama kodu gönder
+                if (currentUser.id) {
+                  setCurrentUserId(currentUser.id);
+                  setShowVerification(true);
+                  sendEmail(currentUser.id);
+                } else {
+                  console.error('[LOGIN] User ID bulunamadı');
+                  toast({
+                    title: 'Hata',
+                    description: 'Kullanıcı ID bulunamadı',
+                    status: 'error',
+                    duration: 3000,
+                    isClosable: true,
+                  });
+                }
+                toast({
+                  title: 'Email Doğrulanmamış',
+                  description: 'Yeni doğrulama kodu gönderildi. Lütfen email adresinizi kontrol edin.',
+                  status: 'warning',
+                  duration: 5000,
+                  isClosable: true,
+                });
+                localStorage.setItem('needsEmailVerification', 'true');
               }
-              toast({
-                title: 'Email Doğrulanmamış',
-                description: 'Yeni doğrulama kodu gönderildi. Lütfen email adresinizi kontrol edin.',
-                status: 'warning',
-                duration: 5000,
-                isClosable: true,
-              });
-              localStorage.setItem('needsEmailVerification', 'true');
             }
           } else {
             console.log("[LOGIN] Kullanıcı GetList içinde bulunamadı.");

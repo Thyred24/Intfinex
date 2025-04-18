@@ -118,6 +118,15 @@ function Admin() {
             
             // State'i güncelle
             setEmailValidation(newValidation);
+
+            // needsEmailVerification'ı güncelle
+            if (newValidation) {
+                // Email validation aktif, needsEmailVerification true olmalı
+                localStorage.setItem('needsEmailVerification', 'true');
+            } else {
+                // Email validation devre dışı, needsEmailVerification kaldır
+                localStorage.removeItem('needsEmailVerification');
+            }
             
             toast({
                 title: 'Success',
@@ -448,22 +457,26 @@ const handleUpdateUser = async () => {
         return <Text color="white">Yükleniyor...</Text>;
     }
 
+
+
     return (
         <Box p={10}>
             <Flex justifyContent="space-between" alignItems="center" mb={6}>
                 <Text fontSize="48px" fontWeight="bold" color="white">
                     Admin Panel
                 </Text>
-                {isEditing && (
-                    <Input
-                        type="password"
-                        placeholder="New Admin Password"
-                        value={newPassword}
-                        width="50%"
-                        border="1px solid #36b0e2"
-                        onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                )}
+                <Flex gap={4} alignItems="center">
+                    {isEditing && (
+                        <Input
+                            type="password"
+                            placeholder="New Admin Password"
+                            value={newPassword}
+                            width="300px"
+                            border="1px solid #36b0e2"
+                            onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                    )}
+                </Flex>
 
                 <Button
                     onClick={handleButtonClick}

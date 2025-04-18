@@ -49,6 +49,7 @@ export default function RegisterInput(props: StackProps) {
   const [verificationMessage, setVerificationMessage] = useState('');
   const [registrationError, setRegistrationError] = useState('');
   const [isPhoneDropdownOpen, setIsPhoneDropdownOpen] = useState(false);
+  const [emailValidation, setEmailValidation] = useState(true);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,6 +58,20 @@ export default function RegisterInput(props: StackProps) {
   
 
   useEffect(() => {
+    // tempUser verisini al
+    const tempUserStr = localStorage.getItem('tempUser');
+    if (tempUserStr) {
+      const tempUser = JSON.parse(tempUserStr);
+      setFormData((prev) => ({ ...prev, userId: tempUser.id }));
+    }
+  
+    // emailValidation kontrolü
+    const emailValidationStored = localStorage.getItem('emailValidation');
+    if (emailValidationStored !== null) {
+      setEmailValidation(emailValidationStored === 'true');
+    }
+  
+    // telefon dropdown'u izleme
     const interval = setInterval(() => {
       const dropdown = document.querySelector('.react-tel-input .country-list') as HTMLElement;
       if (dropdown && dropdown.style.display !== 'none') {
@@ -64,7 +79,7 @@ export default function RegisterInput(props: StackProps) {
       } else {
         setIsPhoneDropdownOpen(false);
       }
-    }, 200); // sürekli kontrol et
+    }, 200);
   
     return () => clearInterval(interval); // temizlik
   }, []);
@@ -414,7 +429,41 @@ export default function RegisterInput(props: StackProps) {
         // userId'yi state'e kaydet
         setFormData(prev => ({ ...prev, userId }));
 
-        // Email doğrulama kodunu gönder
+        // Email validation kontrolü
+        const emailValidationStored = localStorage.getItem('emailValidation');
+        const emailValidation = emailValidationStored !== null ? emailValidationStored === 'true' : true;
+
+        if (!emailValidation) {
+          // Email doğrulama atlanıyor
+          console.log('[REGISTER] Email doğrulama devre dışı, kullanıcı doğrudan dashboard\'a yönlendiriliyor');
+          
+          // Geçici kullanıcı bilgilerini localStorage'a kaydet
+          const tempUserData = {
+            id: userId,
+            name: formData.name,
+            email: formData.email,
+            password: formData.password,
+            phoneNumber: formData.phoneNumber || '',
+            uniqueId: uniqueId,
+            isEmailApproved: true // Email doğrulaması atlandığı için true olarak işaretliyoruz
+          };
+          localStorage.setItem('tempUser', JSON.stringify(tempUserData));
+          localStorage.setItem('emailValidation', 'false');
+
+          toast({
+            title: 'Başarılı',
+            description: 'Kayıt başarılı, yönlendiriliyorsunuz...',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+
+          // Dashboard'a yönlendir
+          window.location.href = '/dashboard';
+          return;
+        }
+
+        // Email doğrulama aktif, normal akışa devam et
         await sendEmailCode();
 
       } else {
@@ -428,6 +477,7 @@ export default function RegisterInput(props: StackProps) {
           duration: 3000,
           isClosable: true,
         });
+        return;
       }
 
       // API'nin döndüğü ID'yi al
@@ -893,14 +943,14 @@ return (
         )}
         {activeStep === 0 && (
           <CustomButton
-            onClick={handleNext}
-            loading={loading}
-            loadingText='Processing...'
-            width="100%"
-            mt={{ base: 2, sm: -5 }}
-          >
-            Next
-          </CustomButton>
+          onClick={handleNext}
+          loading={loading}
+          loadingText='Processing...'
+          width="100%"
+          mt={{ base: 2, sm: -5 }}
+        >
+          {emailValidation ? 'Next' : 'Verify'}
+        </CustomButton>
         )}
       </Flex>
     </Box>
