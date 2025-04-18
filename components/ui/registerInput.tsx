@@ -18,7 +18,6 @@ import { FaEnvelope, FaPhone, FaUser } from 'react-icons/fa';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import CustomButton from '@/components/ui/button';
-import { environment } from '@/app/config/environment';
 
 
 interface FormData {
@@ -286,7 +285,11 @@ export default function RegisterInput(props: StackProps) {
           }
 
           // Login successful, save user information
-          localStorage.clear(); // Clear temporary data
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userList');
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('tempUser');
 
           const userData = {
             ...tempUser,
@@ -754,7 +757,7 @@ return (
         </Box>
       )}
 
-      {activeStep === 1 && environment.emailValidation && (
+      {activeStep === 1 && localStorage.getItem('emailValidation') !== 'false' && (
         <Box mt={{ base: "20px", sm: "30px", md: "40px" }} mb={{ base: "10px", sm: "15px", md: "20px" }}>
         <Text fontSize="lg" mb={4} color="white">
           We&apos;ve sent a verification code to {formData.email}

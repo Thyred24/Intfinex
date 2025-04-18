@@ -8,7 +8,6 @@ import { useToast } from '@chakra-ui/toast'
 import { useDisclosure } from '@chakra-ui/hooks'
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useState, useCallback } from 'react'
-import { environment } from '@/app/config/environment'
 import Btn from '@/components/ui/button'
 
 // API endpoint sabitleri
@@ -97,7 +96,10 @@ function Admin() {
     const [users, setUsers] = useState<User[]>([]);
     const [adminName, setAdminName] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(true);
-    const [emailValidation, setEmailValidation] = useState<boolean>(environment.emailValidation);
+    const [emailValidation, setEmailValidation] = useState(() => {
+        const stored = localStorage.getItem('emailValidation');
+        return stored !== null ? stored === 'true' : true; // varsayılan true
+      });
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [itemsPerPage] = useState<number>(10);
@@ -106,6 +108,35 @@ function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const router = useRouter();
     const toast = useToast();
+
+    const toggleEmailValidation = useCallback(() => {
+        try {
+            const newValidation = !emailValidation;
+            
+            // LocalStorage'a kaydet
+            localStorage.setItem('emailValidation', newValidation.toString());
+            
+            // State'i güncelle
+            setEmailValidation(newValidation);
+            
+            toast({
+                title: 'Success',
+                description: `Email validation ${newValidation ? 'activated' : 'deactivated'}`,
+                status: 'success',
+                duration: 3000,
+                isClosable: true,
+            });
+        } catch (error) {
+            console.error('Email validation toggle error:', error);
+            toast({
+                title: 'Error',
+                description: 'Could not change email validation status',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+        }
+    }, [emailValidation, toast]);
 
     // API çağrısı için yardımcı fonksiyon
     const makeApiCall = useCallback(async <T,>(url: string, options: RequestInit = {}): Promise<ApiResponse<T>> => {
@@ -261,7 +292,11 @@ function Admin() {
     }, [fetchUsers, setLoading, router]);
 
     const handleLogout = () => {
-        localStorage.clear();
+        localStorage.removeItem('userData');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userList');
+        localStorage.removeItem('adminAuthenticated');
+        localStorage.removeItem('tempUser');
         router.push('/');
     };
 
@@ -490,42 +525,26 @@ const handleUpdateUser = async () => {
                     <Flex justifyContent="space-between" alignItems="center">
                         <Text color="gray.300">Global Status</Text>
                         <Box>
-                            <Button
-                                size="lg"
-                                colorScheme="teal"
-                                variant="outline"
-                                _hover={{ bg: '#36b0e2' }}
-                                onClick={async () => {
-                                    try {
-                                        const newValidation = !emailValidation;
-                                        environment.emailValidation = newValidation;
-                                        setEmailValidation(newValidation);
-                                        
-                                        toast({
-                                            title: 'Başarılı',
-                                            description: `Email doğrulaması ${newValidation ? 'aktif' : 'pasif'} edildi`,
-                                            status: 'success',
-                                            duration: 3000,
-                                            isClosable: true,
-                                        });
-                                    } catch (error) {
-                                        console.error('Email validation toggle error:', error);
-                                        toast({
-                                            title: 'Hata',
-                                            description: 'Email doğrulama durumu değiştirilemedi',
-                                            status: 'error',
-                                            duration: 3000,
-                                            isClosable: true,
-                                        });
-                                    }
-                                }}
-                            >
-                                {emailValidation ? 'Turn Off All' : 'Turn On All'}
-                            </Button>
-                            <Text color="gray.400" mt={2} fontSize="sm">
-                                Current Status: {emailValidation ? 'Active' : 'Inactive'}
-                            </Text>
-                        </Box>
+          <Button
+            size="lg"
+            bg="#36b0e2"
+            color="#000A1C"
+            _hover={{
+              bg: "linear-gradient(to top, #002047 1%, rgb(54, 176, 226) 10%, #002047 100%)",
+              color: "#ffffff",
+              transition: "all 0.3s ease"
+            }}
+            transition="all 0.3s ease"
+            onClick={toggleEmailValidation}
+          >
+            {emailValidation ? 'Turn Off All' : 'Turn On All'}
+          </Button>
+          <Text color="gray.400" mt={2} fontSize="sm">
+            Current Status: <Text as="span" color={emailValidation ? '#36b0e2' : 'gray.400'}>
+              {emailValidation ? 'Active' : 'Inactive'}
+            </Text>
+          </Text>
+        </Box>
                     </Flex>
                 </Box>
             </Flex>

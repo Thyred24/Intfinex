@@ -187,7 +187,11 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
                     if (item.name === "Settings") {
                       onOpen();
                     } else if (item.name === "Logout") {
-                      localStorage.clear();
+                      localStorage.removeItem('userData');
+                      localStorage.removeItem('userEmail');
+                      localStorage.removeItem('userList');
+                      localStorage.removeItem('adminAuthenticated');
+                      localStorage.removeItem('tempUser');
                       router.push('/');
                     }
                   }}

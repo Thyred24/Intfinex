@@ -42,7 +42,11 @@ function Dashboard() {
 
         if (!userDataRaw || !userEmail) {
           console.log("[Dashboard] Oturum bilgileri bulunamadı");
-          localStorage.clear();
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userList');
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('tempUser');
           toast({
             title: 'Oturum Hatası',
             description: 'Lütfen tekrar giriş yapın',
@@ -64,7 +68,11 @@ function Dashboard() {
           }
         } catch (e) {
           console.log("[Dashboard] Token format hatası:", e);
-          localStorage.clear()
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userList');
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('tempUser');
           toast({
             title: 'Token Hatası',
             description: 'Oturum bilgileriniz geçersiz. Lütfen tekrar giriş yapın.',
@@ -82,7 +90,11 @@ function Dashboard() {
         const user = await fetchUserByEmail(userEmail, token);
 
         if (!user) {
-          localStorage.clear();
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userList');
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('tempUser');
           toast({
             title: 'API Hatası',
             description: `Kullanıcı bilgileri alınamadı`,
@@ -134,7 +146,11 @@ function Dashboard() {
             isClosable: true,
           });
         } else {
-          localStorage.clear();
+          localStorage.removeItem('userData');
+          localStorage.removeItem('userEmail');
+          localStorage.removeItem('userList');
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('tempUser');
           console.log("[Dashboard] Kullanıcı bulunamadı");
           toast({
             title: 'Kullanıcı Bulunamadı',
@@ -148,7 +164,11 @@ function Dashboard() {
 
       } catch (error) {
         console.error("Hata:", error);
-        localStorage.clear();
+        localStorage.removeItem('userData');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userList');
+        localStorage.removeItem('adminAuthenticated');
+        localStorage.removeItem('tempUser');
         toast({
           title: 'Beklenmeyen Hata',
           description: 'Bir sorun oluştu, lütfen tekrar deneyin',
