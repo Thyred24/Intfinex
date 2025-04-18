@@ -20,7 +20,7 @@ function Header() {
     setIsLoggedIn(!!userData);
   }, []);
 
-  if (pathname === "/admin") {
+  if (pathname?.startsWith("/admin")) {
     return null;
   }
   

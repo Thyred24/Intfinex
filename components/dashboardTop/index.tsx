@@ -76,7 +76,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
       const userEmail = localStorage.getItem('userEmail');
   
       if (!authData || !userEmail) {
-        router.push('/login');
+        window.location.href = '/';
         return;
       }
   
@@ -87,7 +87,7 @@ function DashboardTop({ onViewChange, activeView }: DashboardTopProps) {
       if (user) {
         setUserData(user);
       } else {
-        router.push('/');
+        window.location.href = '/';
       }
     };
   

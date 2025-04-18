@@ -745,7 +745,7 @@ return (
             )})
           }
             {registrationError && (
-            <Box mb={4} textAlign="center" width="100%">
+            <Box mb={4} textAlign="center" width="200%">
               <Text color="red.500" fontSize="sm">
                 {registrationError}
               </Text>

@@ -42,6 +42,7 @@ function Dashboard() {
 
         if (!userDataRaw || !userEmail) {
           console.log("[Dashboard] Oturum bilgileri bulunamadı");
+          localStorage.clear();
           toast({
             title: 'Oturum Hatası',
             description: 'Lütfen tekrar giriş yapın',
@@ -49,7 +50,7 @@ function Dashboard() {
             duration: 3000,
             isClosable: true,
           });
-          router.push('/');
+          window.location.href = '/';
           return;
         }
 
@@ -63,6 +64,7 @@ function Dashboard() {
           }
         } catch (e) {
           console.log("[Dashboard] Token format hatası:", e);
+          localStorage.clear()
           toast({
             title: 'Token Hatası',
             description: 'Oturum bilgileriniz geçersiz. Lütfen tekrar giriş yapın.',
@@ -70,7 +72,7 @@ function Dashboard() {
             duration: 3000,
             isClosable: true,
           });
-          router.push('/');
+          window.location.href = '/';
           return;
         }
 
@@ -80,6 +82,7 @@ function Dashboard() {
         const user = await fetchUserByEmail(userEmail, token);
 
         if (!user) {
+          localStorage.clear();
           toast({
             title: 'API Hatası',
             description: `Kullanıcı bilgileri alınamadı`,
@@ -131,6 +134,7 @@ function Dashboard() {
             isClosable: true,
           });
         } else {
+          localStorage.clear();
           console.log("[Dashboard] Kullanıcı bulunamadı");
           toast({
             title: 'Kullanıcı Bulunamadı',
@@ -144,6 +148,7 @@ function Dashboard() {
 
       } catch (error) {
         console.error("Hata:", error);
+        localStorage.clear();
         toast({
           title: 'Beklenmeyen Hata',
           description: 'Bir sorun oluştu, lütfen tekrar deneyin',
@@ -152,7 +157,7 @@ function Dashboard() {
           isClosable: true,
         });
         setError('Beklenmeyen bir hata oluştu');
-        router.push('/');
+        window.location.href = '/';
       } finally {
         setLoading(false);
       }
