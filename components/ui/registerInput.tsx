@@ -50,6 +50,7 @@ export default function RegisterInput(props: StackProps) {
   const [registrationError, setRegistrationError] = useState('');
   const [isPhoneDropdownOpen, setIsPhoneDropdownOpen] = useState(false);
   const [emailValidation, setEmailValidation] = useState(true);
+  const [toastMessage, setToastMessage] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -434,34 +435,44 @@ export default function RegisterInput(props: StackProps) {
         const emailValidation = emailValidationStored !== null ? emailValidationStored === 'true' : true;
 
         if (!emailValidation) {
-          // Email doğrulama atlanıyor
-          console.log('[REGISTER] Email doğrulama devre dışı, kullanıcı doğrudan dashboard\'a yönlendiriliyor');
-          
-          // Geçici kullanıcı bilgilerini localStorage'a kaydet
-          const tempUserData = {
-            id: userId,
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-            phoneNumber: formData.phoneNumber || '',
-            uniqueId: uniqueId,
-            isEmailApproved: true // Email doğrulaması atlandığı için true olarak işaretliyoruz
-          };
-          localStorage.setItem('tempUser', JSON.stringify(tempUserData));
-          localStorage.setItem('emailValidation', 'false');
+  // Email doğrulama atlanıyor
+  console.log('[REGISTER] Email doğrulama devre dışı, kullanıcı doğrudan dashboard\'a yönlendiriliyor');
 
-          toast({
-            title: 'Başarılı',
-            description: 'Kayıt başarılı, yönlendiriliyorsunuz...',
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          });
+  // Geçici kullanıcı bilgilerini localStorage'a kaydet
+  const tempUserData = {
+    id: userId,
+    name: formData.name,
+    email: formData.email,
+    password: formData.password,
+    phoneNumber: formData.phoneNumber || '',
+    uniqueId: uniqueId,
+    isEmailApproved: true
+  };
 
-          // Dashboard'a yönlendir
-          window.location.href = '/dashboard';
-          return;
-        }
+  localStorage.setItem('tempUser', JSON.stringify(tempUserData));
+
+  // 🟡 Bunları mutlaka ekle 👇
+  localStorage.setItem('email', formData.email); // Dashboard için gerekli
+  localStorage.setItem('token', 'geçici-token'); // Eğer backend token doğrulama istiyorsa burası gerçek token olmalı
+  localStorage.setItem('emailValidation', 'false');
+
+  const message = emailValidation
+  ? 'Verification code sent to your email.'
+  : 'Email verification successful!';
+
+toast({
+  title: 'Success',
+  description: message,
+  status: 'success',
+  duration: 3000,
+  isClosable: true,
+});
+
+setToastMessage(message);
+
+  window.location.href = '/';
+  return;
+}
 
         // Email doğrulama aktif, normal akışa devam et
         await sendEmailCode();
@@ -740,7 +751,7 @@ return (
               fontSize: '16px',
               backgroundColor: 'transparent',
               border: '1px solid #36b0e2',
-              borderRadius: '0.375rem',
+              borderRadius: '0.3rem',
               color: 'white',
               paddingLeft: '48px',
             }}
@@ -748,7 +759,7 @@ return (
               backgroundColor: 'transparent',
               border: 'none',
               borderRight: '1px solid #36b0e2',
-              borderRadius: '0.375rem 0 0 0.375rem',
+              borderRadius: '0.3rem 0 0 0.3rem',
             }}
             enableSearch={true}
             searchClass="phone-search-input"
@@ -801,6 +812,13 @@ return (
             <Box mb={4} textAlign="center" width="200%">
               <Text color="red.500" fontSize="sm">
                 {registrationError}
+              </Text>
+            </Box>
+          )}
+          {toastMessage && (
+            <Box mb={4} textAlign="center" width="200%">
+              <Text color="green.500" fontSize="sm">
+                {toastMessage}
               </Text>
             </Box>
           )}

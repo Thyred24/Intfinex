@@ -33,6 +33,17 @@ function Hero() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    const navigationType = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+  
+    // Sayfa yenilenmişse localStorage temizlenir
+    if (navigationType?.type === 'reload') {
+      console.log('[INFO] Sayfa yenilendi, localStorage temizleniyor...');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('email');
+      localStorage.removeItem('token');
+      localStorage.removeItem('userEmail');
+    }
+  
     // LocalStorage'da userData var mı kontrol et
     const userData = localStorage.getItem('userData');
     setIsLoggedIn(!!userData);
